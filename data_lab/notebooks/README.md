@@ -1,6 +1,6 @@
 # Data Lab Educational Notebooks
 
-![Reactor scene](./images/reactor_intro_scooter.png)
+![Reactor scene](./resources/images/reactor_intro_scooter.jpg)
 *Example Reactor Output*
 <br><br>
 This series of notebooks gives a guided tour through the functionality of Data Lab, building on concepts along the way by starting simple and working up to more complex usage. 
@@ -12,7 +12,7 @@ Next, we take to the skies in drone scenes by taking simulation control of the e
 Finally we will look at calculating statistics on our generated data, and how these statistics can affect model training.
 <br><br>
 
-![Parking scene](./images/parking_scene.png)
+![Parking scene](./resources/images/parking_scene.jpg)
 *Example Parking Scene*
 
 ---
@@ -35,9 +35,9 @@ Finally we will look at calculating statistics on our generated data, and how th
     - In this notebook we write functions to populate our environment with abundant road sign training examples.
 8. [Reactor Stroller Experiment](./8_stroller_experiment)
     - We enact interdependent multi-object animation to place pedestrians behind strollers, and review training results achieved using a scaled output batch.
-9. [Drone scene from flight log](./8_drone_from_flight_log.ipynb)
+9. [Drone scene from flight log](./9_drone_from_flight_log.ipynb)
     - Takes an existing flight log and generate an airborne Data Lab scene.
-10. [Airborne Object Tracking](./9_airborne_object_tracking.ipynb)
+10. [Airborne Object Tracking](./10_airborne_object_tracking.ipynb)
     - Jointly simulate an ego and another airborne object to create object tracking data.
-11. [Impact of Dataset Statistics](./10_dataset_statistics.ipynb)
+11. [Impact of Dataset Statistics](./11_dataset_statistics.ipynb)
     - Observe the benefits of healing domain gap using dataset statistics to tune data generation parameters.
