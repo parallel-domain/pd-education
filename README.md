@@ -18,12 +18,13 @@ The PD-SDK provides an intuitive interface for loading and interacting with mach
 <br>
 
 ### For first install and when getting updates:
-1. Pull this repo locally and navigate to it in a terminal
-2. Create a fresh Python virtual environment (venv) for working with this repo by running `python -m venv ./venv`
-3. Activate your venv in your terminal by running one of the following:
+1. Install Git LFS (Large File Storage) by following the instructions here: [Git LFS Installation Docs](https://github.com/git-lfs/git-lfs?utm_source=gitlfs_site&utm_medium=installation_link&utm_campaign=gitlfs#installing)
+2. Pull this repo locally and navigate to it in a terminal
+3. Create a fresh Python virtual environment (venv) for working with this repo by running `python -m venv ./venv`
+4. Activate your venv in your terminal by running one of the following:
     - Windows Powershell: `./venv/scripts/activate.ps1`
     - Linux: `./venv/bin/activate`
-4. Install requirements to your venv by running `pip install -r requirements.txt` in your terminal
+5. Install requirements to your venv by running `pip install -r requirements.txt` in your terminal
 
 <br>
 
