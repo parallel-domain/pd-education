@@ -1,7 +1,7 @@
 import logging
 import random
 
-from typing import Union, Dict, Optional
+from typing import Union, Dict, Optional, List
 
 from pd.data_lab.config.distribution import CenterSpreadConfig, EnumDistribution, MinMaxConfigInt, MinMaxConfigFloat
 
@@ -15,7 +15,7 @@ from paralleldomain.data_lab.generators.position_request import (
 )
 from paralleldomain.data_lab.generators.random_pedestrian import RandomPedestrianGeneratorParameters
 from paralleldomain.data_lab.generators.traffic import TrafficGeneratorParameters
-from paralleldomain.model.annotation import SemanticSegmentation2D, InstanceSegmentation2D, Depth
+from paralleldomain.model.annotation import SemanticSegmentation2D, InstanceSegmentation2D, Depth, Annotation
 from paralleldomain.utilities.logging import setup_loggers
 from paralleldomain.utilities.transformation import Transformation
 
@@ -25,7 +25,9 @@ logging.getLogger("pd").setLevel(logging.CRITICAL)
 FOV = 70
 
 
-def build_sensor_rig():
+def build_sensor_rig(annotations: Optional[List[Annotation]] = None):
+    if annotations is None:
+        annotations = [SemanticSegmentation2D, InstanceSegmentation2D, Depth]
     sensor_rig = data_lab.SensorRig(
         sensor_configs=[
             data_lab.SensorConfig.create_camera_sensor(
@@ -36,7 +38,7 @@ def build_sensor_rig():
                 pose=Transformation.from_euler_angles(
                     angles=[0.0, 0.0, 0.0], order="xyz", degrees=True, translation=[0.0, 0.0, 2.0]
                 ),
-                annotation_types=[SemanticSegmentation2D, InstanceSegmentation2D, Depth],
+                annotation_types=annotations,
             )
         ]
     )
@@ -49,7 +51,8 @@ def build_empty_scenario(
     location_version: str = "local", 
     ego_lane_type: Union[str, Dict[str, float]] = "Drivable",
     sensor_rig: Optional[data_lab.SensorRig] = None,
-    seed: int = None
+    seed: int = None,
+    annotations: Optional[List[Annotation]] = None,
 ):
     if seed is None:
         seed = random.randint(1, 1_000_000)
@@ -58,7 +61,7 @@ def build_empty_scenario(
         ego_lane_type = {ego_lane_type: 1.0}
     
     if sensor_rig is None:
-        sensor_rig = build_sensor_rig()
+        sensor_rig = build_sensor_rig(annotations=annotations)
 
     print(f"Using random seed {seed} on {location_name}")
 
@@ -100,7 +103,8 @@ def build_demo_scenario(
     ego_lane_type: Union[str, Dict[str, float]] = "Drivable",
     sensor_rig: Optional[data_lab.SensorRig] = None,
     seed: int = None,
-    traffic_density: float = 0.7
+    traffic_density: float = 0.7,
+    annotations: Optional[List[Annotation]] = None,
 ):
 
     # Load environment and ego vehicle
@@ -109,7 +113,8 @@ def build_demo_scenario(
         location_version=location_version,
         ego_lane_type=ego_lane_type,
         sensor_rig=sensor_rig,
-        seed=seed
+        seed=seed,
+        annotations=annotations,
     )
 
     # Place parked vehicles in the scene
@@ -147,7 +152,7 @@ def build_demo_scenario(
                     max_spawn_radius=100.0
                 )
             ),
-            num_of_pedestrians_range=MinMaxConfigInt(min=10, max=60),
+            num_of_pedestrians_range=MinMaxConfigInt(min=5, max=60),
             speed_range=MinMaxConfigFloat(min=0.5, max=1.1)
         )
     )
