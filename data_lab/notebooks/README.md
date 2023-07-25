@@ -23,9 +23,9 @@ Finally we will look at calculating statistics on our generated data, and how th
     - In this notebook we familiarize ourselves with the anatomy of a Data Lab script by generating a basic driving scenario.
 2. [Parking scene](./2_parking.ipynb)
     - This notebook explores modifying agent and environment parameters to create parking scenes with a variety of parking space styles.
-3. [Debris](./4_debris.ipynb)
+3. [Debris](./3_debris.ipynb)
     - We gain experience querying the asset library for interesting objects and scattering them in the scene using a debris generator.
-4. [Intro to Reactor](./3_reactor_intro.ipynb)
+4. [Intro to Reactor](./4_reactor_intro.ipynb)
     - We get our first glimpse at placing custom simulation agents, placing a geometric primitive in the scene and inpainting it using textual prompts and Reactor
 5. [Pedestrian Behaviors](./5_pedestrians.ipynb)
     - We explore the possibilities of pedestrian control and the edge cases they can generate data for.
@@ -33,7 +33,7 @@ Finally we will look at calculating statistics on our generated data, and how th
     - We learn how to load map data and combine it with rendered frames to create lane line annotations.
 7. [Road Signs](./7_road_signs.ipynb)
     - In this notebook we write functions to populate our environment with abundant road sign training examples.
-8. [Reactor Stroller Experiment](./8_stroller_experiment)
+8. [Reactor Stroller Experiment](./8_reactor_strollers.ipynb)
     - We enact interdependent multi-object animation to place pedestrians behind strollers, and review training results achieved using a scaled output batch.
 9. [Drone scene from flight log](./9_drone_from_flight_log.ipynb)
     - Takes an existing flight log and generate an airborne Data Lab scene.
