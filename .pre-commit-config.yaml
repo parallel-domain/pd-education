@@ -1,0 +1,35 @@
+default_language_version:
+  python: python3
+default_stages: [ commit ]
+
+repos:
+  - repo: local
+    hooks:
+    - id: nbgitconvert
+      name: nbgitconvert
+      entry: ./nbgitconvert
+      language: python
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: check-byte-order-marker  # Forbid UTF-8 byte-order markers
+      # Check for files with names that would conflict on a case-insensitive
+      # filesystem like MacOS HFS+ or Windows FAT.
+      - id: check-case-conflict
+      - id: check-json
+      - id: check-yaml
+      - id: end-of-file-fixer
+        exclude: .ipynb$  # exclude notebooks - some issue going on there with EOF fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort
+        args: [ "--profile", "black", "--line-length", "120" ]
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.7.2
+    hooks:
+      - id: pyupgrade
+        args: [ --py36-plus ]
