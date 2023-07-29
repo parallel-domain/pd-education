@@ -1,3 +1,4 @@
 *.ipynb filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
 *.png filter=lfs diff=lfs merge=lfs -text
+data_lab/notebooks/rendered/html/1_data_lab_overview.html filter=lfs diff=lfs merge=lfs -text
