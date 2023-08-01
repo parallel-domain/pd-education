@@ -29,9 +29,12 @@ The PD-SDK provides an intuitive interface for loading and interacting with mach
 <br>
 
 ### For each use:
-- With your venv activated in a terminal:
-    1. Ensure `PYTHONPATH` environment variable is empty string:
-        - Windows Powershell: `$env:PYTHONPATH=""`
-        - Linux: `export PYTHONPATH=""`
-    2. Navigate to the `notebooks` folder you want to work with, for example `cd ./data_lab/notebooks`, and run `jupyter notebook`
-        - Note that this launches a Jupyter classic server and browser window. Optionally, you can use `JupyterLab` or `VSCode` for more advanced notebook features
+1. Navigate to this repo in a terminal
+2. Activate your venv:
+    - Windows Powershell: `./venv/scripts/activate.ps1`
+    - Linux: `./venv/bin/activate`
+3. Ensure `PYTHONPATH` environment variable is empty string:
+    - Windows Powershell: `$env:PYTHONPATH=""`
+    - Linux: `export PYTHONPATH=""`
+4. Run `jupyter notebook`
+    - Note that this launches a Jupyter classic server and browser window. Optionally, you can use `JupyterLab` or `VSCode` for more advanced notebook features
