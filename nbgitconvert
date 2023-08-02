@@ -1,21 +1,17 @@
 #!/usr/bin/env python
 
 """
-Convert juptyer notebooks to html, markdown, or pdf
-durint git commits
+Convert juptyer notebooks to html, markdown, or pdf during git commits
 
-INSTALL:
-1. chmod +x nbgitconvert
-2. to setup up pre-commit hook run "./nbgitconvert --setup"
-
-The setup step will create a git hook that, for any .ipynb files staged for commit, will:
 1. convert them to the format(s) specified in nbgitconvert.ini placing them in a
    rendered/{output_format}/ directory
+    - HTML files will get post-processing to remove rerun visualizer data and store separately
 2. commit those newly converted files
 """
 import argparse
 import configparser
 import os
+import re
 import subprocess
 
 convert_dict = {
@@ -40,29 +36,6 @@ def create_config():
 
     with open(CONFIG_LOCATION, "w") as f:
         f.write('\n'.join(lines))
-
-
-def setup():
-    """
-        1. create a config file (written to {CONFIG_LOCATION}) if one doesn't exist
-        2. create a git pre-commit hook to run this script before every commit
-    """
-    create_config()
-    src = '../../nbgitconvert'
-    dst = '.git/hooks/pre-commit'
-    try:
-        os.symlink(src, dst)
-        print(f"creating sym link from {src} to {dst}")
-    except OSError as e:
-        if 'File exists' in e.strerror:
-            print(
-                'A pre-commit file already exists at %s, you must remove that file '
-                'and rerun setup to create the nbgitconvert hook.'
-                % dst
-            )
-        else:
-            raise e
-    return
 
 
 def system(*args, **kwargs):
@@ -98,50 +71,92 @@ def get_changed_files():
     return files
 
 
-def convert(files, output_type, output_dir):
+def purge_head_and_extract_data_rrd(html_content, data_dir):
+    # Use regex to remove the content within the <head> tag
+    content = re.sub('(?<=<head>).*?(?=</head>)', '', html_content, flags=re.DOTALL)
+
+    # Use regex to extract divs with data-rrd attribute and replace the attribute value with a running number
+    pattern = re.compile(
+        r'<div[^>]*data-rrd="([^"]*)"[^>]*>.*?</div>', re.DOTALL)
+    matches = pattern.findall(content)
+    for i, match in enumerate(matches, start=1):
+        content = content.replace(f'data-rrd="{match}"', f'data-rrd="{i}"', 1)
+        with open(f'{data_dir}/{i}.txt', 'w') as f:
+            f.write(match)
+
+    # Return the modified content
+    return content
+
+
+def treat_html_file(path):
+    # Read the HTML file
+    with open(path) as f:
+        html_content = f.read()
+
+    file_dir = os.path.dirname(path)
+    data_dir = f'{file_dir}/data'
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+
+    modified_html = purge_head_and_extract_data_rrd(html_content, data_dir)
+
+    # Write out modified content
+    new_file = f'{file_dir}/index.html'
+    with open(new_file, 'w') as f:
+        f.write(modified_html)
+
+    # Remove original HTML file
+    os.remove(path)
+
+    print(f'Successfully wrote modified HTML to {os.path.realpath(new_file)} and data to the "data" directory.')
+
+
+def convert(file, output_type, output_dir):
     """run nbconvert to {output_type} on list of {files}"""
     root_dir = os.getcwd()
-    output_dir_ext = output_dir.format(output_type=output_type)
-    convert_count = 0
-    for file in files:
-        file_path = os.path.realpath(file)
-        file_dir = os.path.dirname(file_path)
-        os.chdir(file_dir)
-        output_dir = f'{file_dir}/{output_dir_ext}'
-        args = ['jupyter', 'nbconvert', '--to']
-        args.append(output_type)
-        args.append(file_path)
-        args.append('--output-dir=%s' % output_dir)
-        print(' '.join(args))
-        exitcode = system_with_exitcode(*args)
-        os.chdir(root_dir)
-        if exitcode == 0:
-            convert_count += 1
-    return convert_count
+    file_path = os.path.realpath(file)
+    file_dir = os.path.dirname(file_path)
+    file_name = os.path.basename(file).split('.')[0]
+    os.chdir(file_dir)
+    output_dir = f'{file_dir}/{output_dir}'
+    if output_type == 'html':
+        output_dir += f'/{file_name}'
+    args = ['jupyter', 'nbconvert', '--to']
+    args.append(output_type)
+    args.append(file_path)
+    args.append('--output-dir=%s' % output_dir)
+    print(' '.join(args))
+    exitcode = system_with_exitcode(*args)
+    if output_type == 'html':
+        treat_html_file(f"{output_dir}/{file_name}.html")
+    os.chdir(root_dir)
+    if exitcode == 0:
+        return file
+    else:
+        return None
 
 
-def gitadd(files, output_type, output_dir):
+def gitadd(file, output_type, output_dir):
     """git add all newly (re)rendered notebook files"""
-    output_dir_ext = output_dir.format(output_type=output_type)
-    for file in files:
-        file_dir = file_dir = os.path.dirname(os.path.realpath(file))
-        output_dir = f'{file_dir}/{output_dir_ext}*'
-        exitcode = system_with_exitcode('git', 'add', output_dir)
-        if exitcode != 0:
-            raise Exception('git add failed for %s' % output_dir)
+    file_dir = os.path.dirname(os.path.realpath(file))
+    file_name = os.path.basename(file).split('.')[0]
+    output_dir = f'{file_dir}/{output_dir}'
+    output_dir += f'/{file_name}*' if output_type == 'html' else '*'
+    exitcode = system_with_exitcode('git', 'add', output_dir)
+    if exitcode != 0:
+        raise Exception('git add failed for %s' % output_dir)
 
 
 def process(files, output_type, output_dir):
     """convert notebooks files to {output_type} and git add the rendered notebook files"""
-    convert_count = convert(files, output_type, output_dir)
-    if convert_count > 0:
-        gitadd(files, output_type, output_dir)
+    output_dir_ext = output_dir.format(output_type=output_type)
+    for file in files:
+        convert_result = convert(file, output_type, output_dir_ext)
+        if convert_result is not None:
+            gitadd(convert_result, output_type, output_dir_ext)
 
 
 def main(args):
-    if args['setup']:
-        setup()
-        return
 
     if args['all']:
         files = filter(
@@ -167,7 +182,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Process Config Location")
     parser.add_argument('positional', nargs="*", type=str)
     parser.add_argument('--all', action='store_true')
-    parser.add_argument('--setup', action='store_true')
     try:
         config = configparser.ConfigParser()
         config.read(CONFIG_LOCATION)
