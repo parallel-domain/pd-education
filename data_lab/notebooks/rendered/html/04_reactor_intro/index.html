@@ -1,3 +1,628 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:8940d59e1ccebdfa9d0e9f43f6f049df93091fd4d48e6025c509aeeaa9a4bf23
-size 48118
+<!DOCTYPE html>
+
+<html lang="en">
+<head></head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="Introduction-to-Reactor">Introduction to Reactor<a class="anchor-link" href="#Introduction-to-Reactor">¶</a></h1><p>Reactor is a powerful tool which combines the power of the Parallel Domain synthetic data platform with generative AI, allowing us to place textually prompted objects within realistic looking driving scenarios. This notebook will build on the scenario generation process we saw in the Data Lab Overview notebook by adding a proxy object into the scenario and inpainting it using Reactor. To do this, we will cover the basic usage of the <code>CustomSimulationAgentBehaviour</code> class to place custom agents like the inpainting proxy object in the scene. In later notebooks, we will explore more sophisticated uses of custom simulation agents.</p>
+<p><img alt="Reactor example" src="./resources/images/04_reactor_intro/reactor_intro_scooter.jpg"/>
+<em>Example of prompt: "a person on a mobility scooter".</em></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Notebook-Outline">Notebook Outline<a class="anchor-link" href="#Notebook-Outline">¶</a></h2><ol>
+<li><a href="#imports_and_setup">Imports and Setup</a><ol>
+<li><a href="#import_dependencies">Import Dependencies</a></li>
+<li><a href="#setup_datalab">Setup Data Lab</a></li>
+</ol>
+</li>
+<li><a href="#custom_behavior_proxy">Creating a CustomSimulationAgentBehaviour for the Proxy Object</a></li>
+<li><a href="#scenario_gen">Create a Scenario</a><ol>
+<li><a href="#scenario_base">Build Base Scenario using Helper Function</a></li>
+<li><a href="#scenario_proxy">Adding the Proxy Object for Reactor Object Replacement</a></li>
+<li><a href="#scenario_reactor_config">Setting up Reactor Config</a></li>
+</ol>
+</li>
+<li><a href="#mini_batch">Create a Mini Batch</a><ol>
+<li><a href="#mini_batch_render">Render and Save Mini Batch</a></li>
+<li><a href="#mini_batch_load">Load with PD-SDK</a></li>
+</ol>
+</li>
+<li><a href="#reactor_examples">More Examples</a></li>
+<li><a href="#build_your_own">Build Your Own Reactor Object Replacement Script</a></li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="1.-Imports-and-Setup-">1. Imports and Setup <a class="anchor" id="imports_and_setup"></a><a class="anchor-link" href="#1.-Imports-and-Setup-">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Import-Dependencies-">Import Dependencies <a class="anchor" id="import_dependencies"></a><a class="anchor-link" href="#Import-Dependencies-">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">pd.data_lab.config.distribution</span> <span class="kn">import</span> <span class="n">Distribution</span>
+<span class="kn">from</span> <span class="nn">pd.data_lab.context</span> <span class="kn">import</span> <span class="n">setup_datalab</span>
+<span class="kn">from</span> <span class="nn">pd.data_lab.render_instance</span> <span class="kn">import</span> <span class="n">RenderInstance</span>
+<span class="kn">from</span> <span class="nn">pd.data_lab.sim_instance</span> <span class="kn">import</span> <span class="n">SimulationInstance</span>
+
+<span class="kn">import</span> <span class="nn">paralleldomain.data_lab</span> <span class="k">as</span> <span class="nn">data_lab</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.decoding.dgp.decoder</span> <span class="kn">import</span> <span class="n">DGPDatasetDecoder</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.data_lab.config.reactor</span> <span class="kn">import</span> <span class="n">ReactorObject</span><span class="p">,</span> <span class="n">ReactorConfig</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.model.annotation</span> <span class="kn">import</span> <span class="n">InstanceSegmentation2D</span><span class="p">,</span> <span class="n">SemanticSegmentation2D</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.utilities.logging</span> <span class="kn">import</span> <span class="n">setup_loggers</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.utilities.transformation</span> <span class="kn">import</span> <span class="n">Transformation</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.visualization.model_visualization</span> <span class="kn">import</span> <span class="n">show_scene</span>
+
+<span class="kn">from</span> <span class="nn">resources.notebook_utils</span> <span class="kn">import</span> <span class="n">build_demo_scenario</span>
+
+<span class="n">setup_loggers</span><span class="p">(</span><span class="n">logger_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"__main__"</span><span class="p">,</span> <span class="s2">"paralleldomain"</span><span class="p">])</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"pd"</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Setup-Data-Lab-">Setup Data Lab <a class="anchor" id="setup_datalab"></a><a class="anchor-link" href="#Setup-Data-Lab-">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">LOCATION_VERSION</span> <span class="o">=</span> <span class="s2">"v2.3.0-beta"</span>
+<span class="n">setup_datalab</span><span class="p">(</span><span class="n">LOCATION_VERSION</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="2.-Creating-a-CustomSimulationAgentBehaviour-for-the-Proxy-Object-">2. Creating a CustomSimulationAgentBehaviour for the Proxy Object <a class="anchor" id="custom_behavior_proxy"></a><a class="anchor-link" href="#2.-Creating-a-CustomSimulationAgentBehaviour-for-the-Proxy-Object-">¶</a></h2><p>We now derive from Data Lab's <code>CustomSimulationAgentBehaviour</code> class a <code>BlockEgoBehaviour</code> which will allow us to place our proxy object blocking the ego path with some adjustable offsets to aid with scene context. For example, the <code>lateral_offset</code> parameter enables us to spawn the object on the sidewalks adjacent to our lane. The <code>CustomSimulationAgentBehaviour</code> class has three abstract methods which we will need to define. In this case, we will not add any functionality to the <code>update_state</code> method, which can be used to incrementally adjust the pose of the custom agent with each step in time, since we just want to place a stationary object in the scene. Most important for our use case here is the <code>set_initial_state</code> method, where we will take our initialization params and establish the pose of the object relative to the ego spawn location.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># This CustomSimulationAgentBehavior lets us place objects blocking the ego path</span>
+<span class="k">class</span> <span class="nc">BlockEgoBehaviour</span><span class="p">(</span><span class="n">data_lab</span><span class="o">.</span><span class="n">CustomSimulationAgentBehaviour</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> 
+        <span class="n">lateral_offset</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">vertical_offset</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">dist_to_ego</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span> 
+        <span class="n">scale_factors</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dist_to_ego</span> <span class="o">=</span> <span class="n">dist_to_ego</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lateral_offset</span> <span class="o">=</span> <span class="n">lateral_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vertical_offset</span> <span class="o">=</span> <span class="n">vertical_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_factors</span> <span class="o">=</span> <span class="n">scale_factors</span>
+
+    <span class="k">def</span> <span class="nf">set_initial_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">sim_state</span><span class="p">:</span> <span class="n">data_lab</span><span class="o">.</span><span class="n">ExtendedSimState</span><span class="p">,</span>
+        <span class="n">agent</span><span class="p">:</span> <span class="n">data_lab</span><span class="o">.</span><span class="n">CustomSimulationAgent</span><span class="p">,</span>
+        <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">raycast</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">pos_in_ego_coords</span> <span class="o">=</span> <span class="n">data_lab</span><span class="o">.</span><span class="n">coordinate_system</span><span class="o">.</span><span class="n">forward</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist_to_ego</span>
+        <span class="n">pos_in_ego_coords</span> <span class="o">+=</span> <span class="n">data_lab</span><span class="o">.</span><span class="n">coordinate_system</span><span class="o">.</span><span class="n">left</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lateral_offset</span>
+        <span class="n">pos_in_ego_coords</span> <span class="o">+=</span> <span class="n">data_lab</span><span class="o">.</span><span class="n">coordinate_system</span><span class="o">.</span><span class="n">up</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertical_offset</span>
+        <span class="n">pose_in_front_of_ego</span> <span class="o">=</span> <span class="n">sim_state</span><span class="o">.</span><span class="n">ego_pose</span> <span class="o">@</span> <span class="n">pos_in_ego_coords</span>
+        <span class="n">pose</span> <span class="o">=</span> <span class="n">Transformation</span><span class="p">(</span><span class="n">translation</span><span class="o">=</span><span class="n">pose_in_front_of_ego</span><span class="p">)</span>
+        <span class="n">pose_with_scale</span> <span class="o">=</span> <span class="n">pose</span><span class="o">.</span><span class="n">transformation_matrix</span>
+        <span class="n">pose_with_scale</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_factors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pose_with_scale</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_factors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pose_with_scale</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_factors</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">set_pose</span><span class="p">(</span><span class="n">pose</span><span class="o">=</span><span class="n">pose_with_scale</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">sim_state</span><span class="p">:</span> <span class="n">data_lab</span><span class="o">.</span><span class="n">ExtendedSimState</span><span class="p">,</span>
+        <span class="n">agent</span><span class="p">:</span> <span class="n">data_lab</span><span class="o">.</span><span class="n">CustomSimulationAgent</span><span class="p">,</span>
+        <span class="n">raycast</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"BlockEgoBehaviour"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">BlockEgoBehaviour</span><span class="p">(</span>
+            <span class="n">lateral_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lateral_offset</span><span class="p">,</span>
+            <span class="n">vertical_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vertical_offset</span><span class="p">,</span>
+            <span class="n">dist_to_ego</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dist_to_ego</span><span class="p">,</span>
+            <span class="n">scale_factors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factors</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="3.-Create-a-scenario-">3. Create a scenario <a class="anchor" id="scenario_gen"></a><a class="anchor-link" href="#3.-Create-a-scenario-">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Build-Base-Scenario-using-Helper-Function-">Build Base Scenario using Helper Function <a class="anchor" id="scenario_base"></a><a class="anchor-link" href="#Build-Base-Scenario-using-Helper-Function-">¶</a></h3><p>We will use our helper function to build a base scenario into which we can add our reactor object.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">location_name</span> <span class="o">=</span> <span class="s2">"SF_6thAndMission_medium"</span>
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">808039</span>
+<span class="n">scenario</span> <span class="o">=</span> <span class="n">build_demo_scenario</span><span class="p">(</span>
+    <span class="n">location_name</span><span class="o">=</span><span class="n">location_name</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+    <span class="n">location_version</span><span class="o">=</span><span class="n">LOCATION_VERSION</span><span class="p">,</span>
+    <span class="n">annotations</span><span class="o">=</span><span class="p">[</span><span class="n">SemanticSegmentation2D</span><span class="p">,</span> <span class="n">InstanceSegmentation2D</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Using random seed 808039 on SF_6thAndMission_medium
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Adding-the-Proxy-Object-for-Reactor-Object-Replacement-">Adding the Proxy Object for Reactor Object Replacement <a class="anchor" id="scenario_proxy"></a><a class="anchor-link" href="#Adding-the-Proxy-Object-for-Reactor-Object-Replacement-">¶</a></h3><p>When paired with thoughtful dimensional scaling, a cube and sphere can represent a similar shape to many objects we may want to insert into the scene. For example, we could place a person on a mobility scooter by inserting a 1m cube with a bit of extra height scaling into the lane in front of us, 10m ahead of the ego. We can also create a distribution to sample some random lateral offset for a bit of added realism. In the cell below, we will use our scenario's <code>add_agents</code> method to do this using the custom behviour that we defined above.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># This asset will be used as the replacement object for the Reactor prompt</span>
+<span class="n">PROXY_OBJECTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"cube"</span><span class="p">:</span> <span class="s2">"SM_primitive_box_1m"</span><span class="p">,</span>
+    <span class="s2">"sphere"</span><span class="p">:</span> <span class="s2">"SM_primitive_sphere_1m"</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">PROXY_OBJECT</span> <span class="o">=</span> <span class="n">PROXY_OBJECTS</span><span class="p">[</span><span class="s2">"cube"</span><span class="p">]</span>
+
+<span class="c1"># Place the chosen proxy object into the scene, establishing distance to ego, some noise in lateral offset, and scaling factors.</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">add_agents</span><span class="p">(</span>
+    <span class="n">data_lab</span><span class="o">.</span><span class="n">CustomSimulationAgents</span><span class="o">.</span><span class="n">create_object</span><span class="p">(</span><span class="n">asset_name</span><span class="o">=</span><span class="n">PROXY_OBJECT</span><span class="p">,</span> <span class="n">lock_to_ground</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">set_behaviour</span><span class="p">(</span>
+        <span class="n">BlockEgoBehaviour</span><span class="p">(</span>
+            <span class="n">dist_to_ego</span><span class="o">=</span><span class="n">Distribution</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">))</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">random_seed</span><span class="o">=</span><span class="n">scenario</span><span class="o">.</span><span class="n">random_seed</span><span class="p">),</span>
+            <span class="n">lateral_offset</span><span class="o">=</span><span class="n">Distribution</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">))</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">random_seed</span><span class="o">=</span><span class="n">scenario</span><span class="o">.</span><span class="n">random_seed</span><span class="p">),</span>
+            <span class="n">scale_factors</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[4]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>&lt;pd.data_lab.scenario.Scenario at 0x2387d5b0880&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><em>Example scene with cube primitive placed in front of ego</em></p>
+<p><img alt="Example scene with proxy" src="./resources/images/04_reactor_intro/reactor_intro_primitive.jpg"/></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Setting-up-Reactor-Config-">Setting up Reactor Config <a class="anchor" id="scenario_reactor_config"></a><a class="anchor-link" href="#Setting-up-Reactor-Config-">¶</a></h3><p>Now, we will set the prompt(s) we'd like to use and a new semantic class ID for our inpainted object in a <code>ReactorObject</code>. We then pass this object into our <code>ReactorConfig</code>, which gives us a couple more parameters to guide the inpainting process:</p>
+<ul>
+<li><code>use_color_matching</code> - lets Reactor know that we'd like to match the color characteristics of the surrounding frame (generally best left to True)</li>
+<li><code>inference_resolution</code> - image crop will be scaled to this resolution before the image generation process (512 works well)</li>
+<li><code>clip_score_threshold</code> - will determine the minimum clip score for an accepted result. Higher values may yield less, more realistic results (18-26 is a good range)</li>
+</ul>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Give a text prompt for the object we'd like to place in the scene. Passing more than one prompt will lead to random selection.</span>
+<span class="n">reactor_prompts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"a man walking with a cane wearing jeans"</span><span class="p">]</span>
+
+<span class="n">reactor_object</span> <span class="o">=</span> <span class="n">ReactorObject</span><span class="p">(</span><span class="n">prompts</span><span class="o">=</span><span class="n">reactor_prompts</span><span class="p">,</span> <span class="n">asset_name</span><span class="o">=</span><span class="n">PROXY_OBJECT</span><span class="p">,</span> <span class="n">new_class_id</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<span class="n">reactor_config</span> <span class="o">=</span> <span class="n">ReactorConfig</span><span class="p">(</span><span class="n">reactor_object</span><span class="o">=</span><span class="n">reactor_object</span><span class="p">)</span>
+<span class="n">reactor_config</span><span class="o">.</span><span class="n">use_color_matching</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">reactor_config</span><span class="o">.</span><span class="n">inference_resolution</span> <span class="o">=</span> <span class="mi">512</span>
+<span class="n">reactor_config</span><span class="o">.</span><span class="n">clip_score_threshold</span> <span class="o">=</span> <span class="mi">15</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><em>Example of prompt: "stroller"</em></p>
+<p><img alt="Example using prompt &amp;quot;stroller&amp;quot;" src="./resources/images/04_reactor_intro/reactor_intro_stroller.jpg"/></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="4.-Create-a-Mini-Batch-">4. Create a Mini Batch <a class="anchor" id="mini_batch"></a><a class="anchor-link" href="#4.-Create-a-Mini-Batch-">¶</a></h2><p>Now we will take our scenario and generate a couple of scenes with it by passing it to the API, which will return frames of data and store them into a DGP-style dataset. We can then use the PD-SDK to load this directory and access the data.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Render-and-save-the-Mini-Batch-">Render and save the Mini Batch <a class="anchor" id="mini_batch_render"></a><a class="anchor-link" href="#Render-and-save-the-Mini-Batch-">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">OUTPUT_DATASET_PATH</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"./reactor_output/</span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">/seed_</span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2">"</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">data_lab</span><span class="o">.</span><span class="n">create_mini_batch</span><span class="p">(</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span>
+    <span class="n">frames_per_scene</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">number_of_scenes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">reactor_prompts</span><span class="p">),</span>
+    <span class="n">sim_capture_rate</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">start_skip_frames</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">sim_instance</span><span class="o">=</span><span class="n">SimulationInstance</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"fsbapfxq"</span><span class="p">),</span>
+    <span class="n">render_instance</span><span class="o">=</span><span class="n">RenderInstance</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"fsbapfxq"</span><span class="p">),</span>
+    <span class="n">reactor_config</span><span class="o">=</span><span class="n">reactor_config</span><span class="p">,</span>
+    <span class="n">use_cached_reactor_states</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">format_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">dataset_output_path</span><span class="o">=</span><span class="n">OUTPUT_DATASET_PATH</span><span class="p">,</span>
+        <span class="n">encode_to_binary</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">pipeline_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">copy_all_available_sensors_and_annotations</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">run_env</span><span class="o">=</span><span class="s2">"thread"</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>Encoding Progress: 0 sensor frames [00:00, ? sensor frames/s]</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre><span class="ansi-green-fg">2023-07-24 15:34:08</span> <span class="ansi-blue-fg">paralleldomain.encoding.stream_pipeline_builder[build_pipeline_source_generator]</span> <span class="ansi-black-intense-fg ansi-bold">INFO</span> Encoding Scene Step Stream
+<span class="ansi-green-fg">2023-07-24 15:35:20</span> <span class="ansi-blue-fg">paralleldomain.data_lab[create_reactor_frame_stream]</span> <span class="ansi-black-intense-fg ansi-bold">INFO</span> Reactor: creating auxiliary dataset.
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>
+Encoding Progress: 0 sensor frames [00:00, ? sensor frames/s]</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre><span class="ansi-green-fg">2023-07-24 15:35:20</span> <span class="ansi-blue-fg">paralleldomain.encoding.stream_pipeline_builder[build_pipeline_source_generator]</span> <span class="ansi-black-intense-fg ansi-bold">INFO</span> Encoding Scene Step Stream
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>
+Encoding Progress: 1 sensor frames [00:51, 51.73s/ sensor frames]
+Encoding Progress: 3 sensor frames [00:51, 17.33s/ sensor frames]</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre><span class="ansi-green-fg">2023-07-24 15:36:12</span> <span class="ansi-blue-fg">paralleldomain.data_lab[create_reactor_frame_stream]</span> <span class="ansi-black-intense-fg ansi-bold">INFO</span> Reactor: creating reactor dataset.
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>
+Encoding Progress: 3 sensor frames [02:53, 57.81s/ sensor frames] 
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Load-the-dataset-using-PD-SDK-">Load the dataset using PD-SDK <a class="anchor" id="mini_batch_load"></a><a class="anchor-link" href="#Load-the-dataset-using-PD-SDK-">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">DGPDatasetDecoder</span><span class="p">(</span><span class="n">OUTPUT_DATASET_PATH</span><span class="p">)</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">()</span>
+<span class="n">scene</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">get_scene</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">scene_names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">show_scene</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div data-rrd="1" id="acMxdh_rrd" style="display: none;"></div>
+<div id="acMxdh_error" style="display: none;"><p>Timed out waiting for https://app.rerun.io/commit/9cf3033 to load.</p>
+<p>Consider using <code>rr.start_web_viewer_server()</code></p></div>
+<script>
+            acMxdh_timeout = setTimeout(() => {
+                document.getElementById("acMxdh_error").style.display = 'block';
+            }, 2000);
+
+            window.addEventListener("message", function(rrd) {
+                return async function acMxdh_onIframeReady(event) {
+                    var iframe = document.getElementById("acMxdh_iframe");
+                    if (event.source === iframe.contentWindow) {
+                        clearTimeout(acMxdh_timeout);
+                        document.getElementById("acMxdh_error").style.display = 'none';
+                        iframe.style.display = 'inline';
+                        window.removeEventListener("message", acMxdh_onIframeReady);
+                        iframe.contentWindow.postMessage((await rrd), "*");
+                    }
+                }
+            }(async function() {
+                await new Promise(r => setTimeout(r, 0));
+                var div = document.getElementById("acMxdh_rrd");
+                var base64Data = div.dataset.rrd;
+                var intermediate = atob(base64Data);
+                var buff = new Uint8Array(intermediate.length);
+                for (var i = 0; i < intermediate.length; i++) {
+                    buff[i] = intermediate.charCodeAt(i);
+                }
+                return buff;
+            }()));
+        </script>
+<iframe allowfullscreen="" frameborder="0" height="712" id="acMxdh_iframe" src="https://app.rerun.io/commit/9cf3033?url=web_event://&amp;persist=0" style="display: none;" width="950"></iframe>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="5.-More-Examples-">5. More Examples <a class="anchor" id="reactor_examples"></a><a class="anchor-link" href="#5.-More-Examples-">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Example-of-prompt:-%22a-man-walking-with-a-cane-wearing-jeans%22">Example of prompt: "a man walking with a cane wearing jeans"<a class="anchor-link" href="#Example-of-prompt:-%22a-man-walking-with-a-cane-wearing-jeans%22">¶</a></h3><p><img alt="Example using prompt: &amp;quot;a man walking with a cane wearing jeans&amp;quot;" src="./resources/images/04_reactor_intro/reactor_intro_man_with_cane.jpg"/></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="6.-Building-your-own-Reactor-Script-">6. Building your own Reactor Script <a class="anchor" id="build_your_own"></a><a class="anchor-link" href="#6.-Building-your-own-Reactor-Script-">¶</a></h2><p>For a template script to begin working on your own Reactor script, please see the <a href="https://github.com/parallel-domain/pd-sdk/blob/main/examples/data_lab/reactor/generate_new_objects.py">example in the PD-SDK repo</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>
