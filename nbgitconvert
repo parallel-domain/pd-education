@@ -111,49 +111,56 @@ def treat_html_file(path):
     print(f'Successfully wrote modified HTML to {os.path.realpath(new_file)} and data to the "data" directory.')
 
 
-def convert(file, output_type, output_dir):
+def convert(files, output_type, output_dir):
     """run nbconvert to {output_type} on list of {files}"""
-    root_dir = os.getcwd()
-    file_path = os.path.realpath(file)
-    file_dir = os.path.dirname(file_path)
-    file_name = os.path.basename(file).split('.')[0]
-    os.chdir(file_dir)
-    output_dir = f'{file_dir}/{output_dir}'
-    if output_type == 'html':
-        output_dir += f'/{file_name}'
-    args = ['jupyter', 'nbconvert', '--to']
-    args.append(output_type)
-    args.append(file_path)
-    args.append('--output-dir=%s' % output_dir)
-    print(' '.join(args))
-    exitcode = system_with_exitcode(*args)
-    if output_type == 'html':
-        treat_html_file(f"{output_dir}/{file_name}.html")
-    os.chdir(root_dir)
-    if exitcode == 0:
-        return file
-    else:
-        return None
+    converted_paths = []
+
+    for file in files:
+        root_dir = os.getcwd()
+        file_path = os.path.realpath(file)
+        file_dir = os.path.dirname(file_path)
+        file_name = os.path.basename(file).split('.')[0]
+        os.chdir(file_dir)
+        write_dir = f'{file_dir}/{output_dir}'
+        if output_type == 'html':
+            write_dir += f'/{file_name}'
+        args = ['jupyter', 'nbconvert', '--to']
+        args.append(output_type)
+        args.append(file_path)
+        args.append('--output-dir=%s' % write_dir)
+        print(' '.join(args))
+        exitcode = system_with_exitcode(*args)
+        if output_type == 'html':
+            treat_html_file(f"{write_dir}/{file_name}.html")
+        os.chdir(root_dir)
+        if exitcode == 0:
+            converted_paths.append(file)
+        else:
+            raise Exception(f'nbconvert failed for {file}')
+
+    return converted_paths
 
 
-def gitadd(file, output_type, output_dir):
+def gitadd(file_paths, output_type, output_dir):
     """git add all newly (re)rendered notebook files"""
-    file_dir = os.path.dirname(os.path.realpath(file))
-    file_name = os.path.basename(file).split('.')[0]
-    output_dir = f'{file_dir}/{output_dir}'
-    output_dir += f'/{file_name}*' if output_type == 'html' else '*'
-    exitcode = system_with_exitcode('git', 'add', output_dir)
+    add_dirs = []
+    for file_path in file_paths:
+        file_dir = os.path.dirname(os.path.realpath(file_path))
+        file_name = os.path.basename(file_path).split('.')[0]
+        add_dir = f'{file_dir}/{output_dir}'
+        add_dir += f'/{file_name}*' if output_type == 'html' else '*'
+        add_dirs.append(add_dir)
+    exitcode = system_with_exitcode('git', 'add', *add_dirs)
     if exitcode != 0:
-        raise Exception('git add failed for %s' % output_dir)
+        raise Exception(f'git add failed for {output_dir} with exit code {exitcode}')
 
 
 def process(files, output_type, output_dir):
     """convert notebooks files to {output_type} and git add the rendered notebook files"""
     output_dir_ext = output_dir.format(output_type=output_type)
-    for file in files:
-        convert_result = convert(file, output_type, output_dir_ext)
-        if convert_result is not None:
-            gitadd(convert_result, output_type, output_dir_ext)
+    converted_paths = convert(files, output_type, output_dir_ext)
+    if len(converted_paths) > 0:
+        gitadd(converted_paths, output_type, output_dir_ext)
 
 
 def main(args):
