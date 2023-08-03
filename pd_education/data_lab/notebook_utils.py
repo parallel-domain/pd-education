@@ -1,9 +1,6 @@
 import logging
 import random
-
-from typing import Union, Dict, Optional, List
-
-from pd.data_lab.config.distribution import CenterSpreadConfig, EnumDistribution, MinMaxConfigInt, MinMaxConfigFloat
+from typing import Dict, List, Optional, Union
 
 import paralleldomain.data_lab as data_lab
 from paralleldomain.data_lab.generators.ego_agent import AgentType, EgoAgentGeneratorParameters
@@ -15,9 +12,10 @@ from paralleldomain.data_lab.generators.position_request import (
 )
 from paralleldomain.data_lab.generators.random_pedestrian import RandomPedestrianGeneratorParameters
 from paralleldomain.data_lab.generators.traffic import TrafficGeneratorParameters
-from paralleldomain.model.annotation import SemanticSegmentation2D, InstanceSegmentation2D, Depth, Annotation
+from paralleldomain.model.annotation import Annotation, Depth, InstanceSegmentation2D, SemanticSegmentation2D
 from paralleldomain.utilities.logging import setup_loggers
 from paralleldomain.utilities.transformation import Transformation
+from pd.data_lab.config.distribution import CenterSpreadConfig, EnumDistribution, MinMaxConfigFloat, MinMaxConfigInt
 
 setup_loggers(logger_names=["__main__", "paralleldomain", "pd"])
 logging.getLogger("pd").setLevel(logging.CRITICAL)
@@ -47,8 +45,8 @@ def build_sensor_rig(annotations: Optional[List[Annotation]] = None):
 
 
 def build_empty_scenario(
-    location_name: str = "SF_GrantAndCalifornia", 
-    location_version: str = "local", 
+    location_name: str = "SF_GrantAndCalifornia",
+    location_version: str = "local",
     ego_lane_type: Union[str, Dict[str, float]] = "Drivable",
     sensor_rig: Optional[data_lab.SensorRig] = None,
     seed: int = None,
@@ -59,7 +57,7 @@ def build_empty_scenario(
 
     if isinstance(ego_lane_type, str):
         ego_lane_type = {ego_lane_type: 1.0}
-    
+
     if sensor_rig is None:
         sensor_rig = build_sensor_rig(annotations=annotations)
 
@@ -98,8 +96,8 @@ def build_empty_scenario(
 
 
 def build_demo_scenario(
-    location_name: str = "SF_GrantAndCalifornia", 
-    location_version: str = "local", 
+    location_name: str = "SF_GrantAndCalifornia",
+    location_version: str = "local",
     ego_lane_type: Union[str, Dict[str, float]] = "Drivable",
     sensor_rig: Optional[data_lab.SensorRig] = None,
     seed: int = None,
@@ -109,7 +107,7 @@ def build_demo_scenario(
 
     # Load environment and ego vehicle
     scenario = build_empty_scenario(
-        location_name=location_name, 
+        location_name=location_name,
         location_version=location_version,
         ego_lane_type=ego_lane_type,
         sensor_rig=sensor_rig,
