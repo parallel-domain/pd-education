@@ -1,9 +1,16 @@
 # Data Lab Educational Notebooks
 
+### Code tutorials covering all things Data Lab
+
 ![Reactor scene](./resources/images/04_reactor_intro/reactor_intro_scooter.jpg)
 *Example Reactor Output*
 <br><br>
-This series of notebooks gives a guided tour through the functionality of Data Lab, building on concepts along the way by starting simple and working up to more complex usage.
+
+---
+
+## Take the Guided Tour
+
+If you're brand new to data lab, diving head first into some of these tutorials might be too much at once, as they may assume you have prior knowledge of Data Lab tools. For this reason, we offer a guided tour of selected tutorials which build on concepts in a structured way, starting simple and working up to more complex usage, establishing generally useful Data Lab skills while giving a high level view of the wide variety of supported use cases.
 
 First, we review the process of configuring and rendering a basic driving scenario, which establishes the general structure of all Data Lab scripts. Then, we explore changing the environment and generator parameters to change the nature of the scene as we create parking and debris scenarios. Next, we get our first experience with custom simulation agents, placing a geometric primitive into the scene and inpainting it using Reactor's generative AI. After this, we cover making data for pedestrian edge cases, lane line detection, and road sign classification. We close out the land-based demonstrations with a case study on improving stroller detection using Reactor and some advanced simulation tricks.
 
@@ -15,9 +22,7 @@ Finally we will look at calculating statistics on our generated data, and how th
 ![Parking scene](./resources/images/02_parking/parking_scene.jpg)
 *Example Parking Scene*
 
----
-
-## Outline
+### Outline
 
 1. [Data Lab Overview](./01_data_lab_overview.ipynb)
     - In this notebook we familiarize ourselves with the anatomy of a Data Lab script by generating a basic driving scenario.
