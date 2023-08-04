@@ -2,7 +2,7 @@
 
 ### Code tutorials covering all things Data Lab
 
-![Reactor scene](reactor/images/reactor_intro/reactor_intro_scooter.jpg)
+![Reactor scene](reactor/images/introduction/reactor_intro_scooter.jpg)
 *Example Reactor Output*
 <br><br>
 
@@ -30,7 +30,7 @@ Finally we will look at calculating statistics on our generated data, and how th
     - This notebook explores modifying agent and environment parameters to create parking scenes with a variety of parking space styles.
 3. [Debris](road_debris/debris.ipynb)
     - We gain experience querying the asset library for interesting objects and scattering them in the scene using a debris generator.
-4. [Intro to Reactor](reactor/reactor_intro.ipynb)
+4. [Intro to Reactor](reactor/introduction.ipynb)
     - We get our first glimpse at placing custom simulation agents, placing a geometric primitive in the scene and inpainting it using textual prompts and Reactor
 5. [Pedestrian Behaviors](pedestrians/pedestrians_around_ego.ipynb)
     - We explore the possibilities of pedestrian control and the edge cases they can generate data for.
@@ -38,7 +38,7 @@ Finally we will look at calculating statistics on our generated data, and how th
     - We learn how to load map data and combine it with rendered frames to create lane line annotations.
 7. [Road Signs](road_signs/road_signs.ipynb)
     - In this notebook we write functions to populate our environment with abundant road sign training examples.
-8. [Reactor Stroller Experiment](reactor/reactor_strollers.ipynb)
+8. [Reactor Stroller Experiment](reactor/stroller_experiment.ipynb)
     - We enact interdependent multi-object animation to place pedestrians behind strollers, and review training results achieved using a scaled output batch.
 9. [Drone scene from flight log](drones/drone_from_flight_log.ipynb)
     - Takes an existing flight log and generate an airborne Data Lab scene.
