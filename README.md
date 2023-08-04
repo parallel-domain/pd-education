@@ -6,7 +6,7 @@ The recommended workflow when using this repository is to first follow the Data 
 
 ## [Data Lab Educational Notebooks](./data_lab/notebooks/README.md)
 
-Follow this numbered set of notebooks to take a guided tour through the functionality of Data Lab, starting simple and building in use case complexity along the way. By the end of this series, the user should be comfortable using Data Lab to produce data tailored to their use case by having full control over the environment as well as the placement and behavior of the ego and other agents within it. To begin, we utilize generators that guide the behavior of the native Parallel Domain simulation stack, then expand on this by mixing in agents which obey custom simulation behaviors constructed by the user. These concepts then unlock more advanced usage of Data Lab, including the powerful generative AI capabilities of Reactor, allowing us to place custom objects into our scenes using textual prompting, which can give us valuable training examples of difficult-to-record agent types (i.e. pedestrians with strollers or using mobility devices).
+Notebooks covering demonstrations of all things Data Lab, organized by use case. New users can follow the guided tour outlined on the README page to quickly familizarize themselves with the functionality of Data Lab, starting simple and building in use case complexity along the way. By the end of the series, the user should be comfortable using Data Lab to produce data tailored to their own use case by having full control over the environment as well as the placement and behavior of the ego and other agents within it. To begin, we utilize generators that guide the behavior of the native Parallel Domain simulation stack, then expand on this by mixing in agents which obey custom simulation behaviors constructed by the user. These concepts then unlock more advanced usage of Data Lab, including the powerful generative AI capabilities of Reactor, which allows us to place custom objects into our scenes using textual prompting, providing valuable training examples of difficult-to-record agent types (i.e. pedestrians with strollers or using mobility devices).
 
 ## [PD-SDK Masterclass Notebooks](./pd_sdk/notebooks/README.md)
 
@@ -24,7 +24,7 @@ The PD-SDK provides an intuitive interface for loading and interacting with mach
 4. Activate your venv in your terminal by running one of the following:
     - Windows Powershell: `./venv/scripts/activate.ps1`
     - Linux: `./venv/bin/activate`
-5. Install requirements to your venv by running `pip install -r requirements.txt` in your terminal
+5. Install requirements to your venv by running `pip install .` in your terminal
 
 <br>
 
