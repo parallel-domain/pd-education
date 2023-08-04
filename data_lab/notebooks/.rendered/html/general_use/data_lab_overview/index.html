@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head></head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="Data-Lab---General-Usage-Overview">Data Lab - General Usage Overview<a class="anchor-link" href="#Data-Lab---General-Usage-Overview">¶</a></h1><p><img alt="Example General Purpose Data Lab scene" src="./resources/images/01_data_lab_overview/overview_pedestrians.jpg"/></p>
+<p>Welcome to Data Lab, an API which puts the data generation powers of the Parallel Domain synthetic data platform at your fingertips. Data Lab allows users to curate dataset generation parameters which can produce frames of annotated training data that fit a variety of needs in the autonomous vehicle operational domain, including drones. Although Data Lab offers us this vast landscape of data generation possibilities through a numerous set of comprehensive parameters, all of these controls are built around a central, simple to understand recipe which serves as the reusable backbone of any Data Lab script.</p>
+<p>This notebook will demonstrate these central tenets of Data Lab usage, which consist of two main components:</p>
+<ol>
+<li>The <code>scenario</code> - a set of parameters which describe the nature of the operational environment.<ul>
+<li>Location (choose an urban, suburban, or highway map)</li>
+<li>Environment (time of day, weather)</li>
+<li>Agents (ego vehicle, traffic, pedestrians, parked cars, animals, and more)<br/><br/></li>
+</ul>
+</li>
+<li>The <code>sensor_rig</code> - a sensor suite through which we will capture frames of our scenario.<ul>
+<li>Cameras<ul>
+<li>Intrinsics<ul>
+<li>Resolution (width, height)</li>
+<li>Distorion model and coefficients (Brown-Conrady, Fisheye)</li>
+</ul>
+</li>
+<li>Extrinsics<ul>
+<li>6DOF pose (established with choice of convention: Quaternions, Transformation Matrices, or Euler Angles)</li>
+</ul>
+</li>
+<li>Annotations<ul>
+<li>Capture RGB images with any combination of Semantic Segmentation, Instance Segmentation, and Depth</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Notebook-Outline">Notebook Outline<a class="anchor-link" href="#Notebook-Outline">¶</a></h2><p>The following cells will build a general-purpose driving scenario with Data Lab using the following steps:</p>
+<ol>
+<li><a href="#imports_and_setup">Imports and Setup</a><ol>
+<li><a href="#import_dependencies">Import Dependencies</a></li>
+<li><a href="#setup_datalab">Setup Datalab</a></li>
+</ol>
+</li>
+<li><a href="#create_sensor_rig">Create a Sensor Rig</a></li>
+<li><a href="#generate_scenario">Generate a Scenario</a><ol>
+<li><a href="#location_and_seed">Select a Location and Random Seed</a></li>
+<li><a href="#tod_and_weather">Configure Time of Day and Weather Parameters</a></li>
+<li><a href="#place_ego">Place the Ego Vehicle</a></li>
+<li><a href="#place_parked_vehicles">Place Parked Vehicles</a></li>
+<li><a href="#place_pedestrians">Place Random Pedestrians</a></li>
+<li><a href="#preview_scenario">Preview Scenario</a></li>
+</ol>
+</li>
+<li><a href="#mini_batch">Create a Mini-Batch and Load with PD-SDK</a><ol>
+<li><a href="#render_and_save">Submit the scenario object to the API to be simulated and rendered, saving the returned data stream to disk.</a></li>
+<li><a href="#load_W_pd_sdk">Load the dataset with PD-SDK and explore data</a></li>
+</ol>
+</li>
+<li><a href="#make_your_own">Making your own General Purpose Driving Scene Script</a></li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="1.-Imports-and-Setup-">1. Imports and Setup <a class="anchor" id="imports_and_setup"></a><a class="anchor-link" href="#1.-Imports-and-Setup-">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Import-Dependencies-">Import Dependencies <a class="anchor" id="import_dependencies"></a><a class="anchor-link" href="#Import-Dependencies-">¶</a></h3><p>When building any Data Lab script, it is a good start to copy &amp; paste these standard imports for your project. Make sure that the LOCATION_VERSION matches the details of your Data Lab instance.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">from</span> <span class="nn">pd.data_lab.config.distribution</span> <span class="kn">import</span> <span class="n">CenterSpreadConfig</span><span class="p">,</span> <span class="n">EnumDistribution</span><span class="p">,</span> <span class="n">MinMaxConfigInt</span><span class="p">,</span> <span class="n">MinMaxConfigFloat</span>
+<span class="kn">from</span> <span class="nn">pd.data_lab.context</span> <span class="kn">import</span> <span class="n">setup_datalab</span>
+<span class="kn">from</span> <span class="nn">pd.data_lab.render_instance</span> <span class="kn">import</span> <span class="n">RenderInstance</span>
+<span class="kn">from</span> <span class="nn">pd.data_lab.sim_instance</span> <span class="kn">import</span> <span class="n">SimulationInstance</span>
+
+<span class="kn">import</span> <span class="nn">paralleldomain.data_lab</span> <span class="k">as</span> <span class="nn">data_lab</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.data_lab.generators.ego_agent</span> <span class="kn">import</span> <span class="n">AgentType</span><span class="p">,</span> <span class="n">EgoAgentGeneratorParameters</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.data_lab.generators.parked_vehicle</span> <span class="kn">import</span> <span class="n">ParkedVehicleGeneratorParameters</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.data_lab.generators.position_request</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LaneSpawnPolicy</span><span class="p">,</span>
+    <span class="n">LocationRelativePositionRequest</span><span class="p">,</span>
+    <span class="n">PositionRequest</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.data_lab.generators.random_pedestrian</span> <span class="kn">import</span> <span class="n">RandomPedestrianGeneratorParameters</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.data_lab.generators.traffic</span> <span class="kn">import</span> <span class="n">TrafficGeneratorParameters</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.decoding.dgp.decoder</span> <span class="kn">import</span> <span class="n">DGPDatasetDecoder</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.model.annotation</span> <span class="kn">import</span> <span class="n">SemanticSegmentation2D</span><span class="p">,</span> <span class="n">InstanceSegmentation2D</span><span class="p">,</span> <span class="n">Depth</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.utilities.logging</span> <span class="kn">import</span> <span class="n">setup_loggers</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.utilities.transformation</span> <span class="kn">import</span> <span class="n">Transformation</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.visualization.model_visualization</span> <span class="kn">import</span> <span class="n">show_scene</span>
+
+<span class="n">setup_loggers</span><span class="p">(</span><span class="n">logger_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"__main__"</span><span class="p">,</span> <span class="s2">"paralleldomain"</span><span class="p">,</span> <span class="s2">"pd"</span><span class="p">])</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"pd"</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Setup-Data-Lab-">Setup Data Lab <a class="anchor" id="setup_datalab"></a><a class="anchor-link" href="#Setup-Data-Lab-">¶</a></h3><p>Make sure to match the location version loaded on your Data Lab instance</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">LOCATION_VERSION</span> <span class="o">=</span> <span class="s2">"v2.3.0-beta"</span>
+<span class="n">setup_datalab</span><span class="p">(</span><span class="n">LOCATION_VERSION</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="2.-Create-a-Sensor-Rig-">2. Create a Sensor Rig <a class="anchor" id="create_sensor_rig"></a><a class="anchor-link" href="#2.-Create-a-Sensor-Rig-">¶</a></h2><p>This sensor rig is composed of one forward-facing camera, which will allow us to see the scene in front of the ego vehicle. Here, we are using Euler angles to describe the rotation of the camera, but we could also represent this pose using a quaternion or a rotation matrix. Notice that we are passing a list of 3 annotation types to be rendered with our camera data: Semantic Segmentation, Instance Segmentation, and Depth.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Make our sensor rig with a forward-facing 1080p camera</span>
+<span class="n">sensor_rig</span> <span class="o">=</span> <span class="n">data_lab</span><span class="o">.</span><span class="n">SensorRig</span><span class="p">(</span>
+    <span class="n">sensor_configs</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">data_lab</span><span class="o">.</span><span class="n">SensorConfig</span><span class="o">.</span><span class="n">create_camera_sensor</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"Front"</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="mi">1920</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="mi">1080</span><span class="p">,</span>
+            <span class="n">field_of_view_degrees</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span>
+            <span class="n">pose</span><span class="o">=</span><span class="n">Transformation</span><span class="o">.</span><span class="n">from_euler_angles</span><span class="p">(</span>
+                <span class="n">angles</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">order</span><span class="o">=</span><span class="s2">"xyz"</span><span class="p">,</span> <span class="n">degrees</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">translation</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="n">annotation_types</span><span class="o">=</span><span class="p">[</span><span class="n">SemanticSegmentation2D</span><span class="p">,</span> <span class="n">InstanceSegmentation2D</span><span class="p">,</span> <span class="n">Depth</span><span class="p">],</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="3.-Generate-a-Scenario-">3. Generate a Scenario <a class="anchor" id="generate_scenario"></a><a class="anchor-link" href="#3.-Generate-a-Scenario-">¶</a></h2><p>A scenario describes all of the parameters of the scene we want to generate, including the map, weather, time of day, and agent spawning information. We will also pass our sensor rig to this object.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Setting-Location-and-Random-Seed-">Setting Location and Random Seed <a class="anchor" id="location_and_seed"></a><a class="anchor-link" href="#Setting-Location-and-Random-Seed-">¶</a></h3><p>The random seed will allow us to establish determinism in our scene and replicate the conditions in the future. It is best to log this information with the dataset.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Select a location and set a seed</span>
+<span class="n">location_name</span> <span class="o">=</span> <span class="s2">"SF_6thAndMission_medium"</span>
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">223493</span>  <span class="c1"># random.randint(1, 1_000_000)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Using random seed </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Using random seed 223493 on SF_6thAndMission_medium
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Create scenario</span>
+<span class="n">scenario</span> <span class="o">=</span> <span class="n">data_lab</span><span class="o">.</span><span class="n">Scenario</span><span class="p">(</span><span class="n">sensor_rig</span><span class="o">=</span><span class="n">sensor_rig</span><span class="p">)</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">seed</span>
+
+<span class="c1"># Set location</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">set_location</span><span class="p">(</span><span class="n">data_lab</span><span class="o">.</span><span class="n">Location</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">location_name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">LOCATION_VERSION</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Configure-Time-of-Day-and-Weather-Params-">Configure Time of Day and Weather Params <a class="anchor" id="tod_and_weather"></a><a class="anchor-link" href="#Configure-Time-of-Day-and-Weather-Params-">¶</a></h3><p>We can configure the components our scenario's environment to strictly adhere to constant values, or we can set distributions. In this example, we set probabilities for different times of day we would like to see, as well as setting some ranges for weather parameters. We will set a constant value of 0.0 for rain.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Set weather variables and time of day</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">time_of_day</span><span class="o">.</span><span class="n">set_category_weight</span><span class="p">(</span><span class="n">data_lab</span><span class="o">.</span><span class="n">TimeOfDays</span><span class="o">.</span><span class="n">Day</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">)</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">time_of_day</span><span class="o">.</span><span class="n">set_category_weight</span><span class="p">(</span><span class="n">data_lab</span><span class="o">.</span><span class="n">TimeOfDays</span><span class="o">.</span><span class="n">Dusk</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">clouds</span><span class="o">.</span><span class="n">set_uniform_distribution</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">rain</span><span class="o">.</span><span class="n">set_constant_value</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">fog</span><span class="o">.</span><span class="n">set_uniform_distribution</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">wetness</span><span class="o">.</span><span class="n">set_uniform_distribution</span><span class="p">(</span><span class="n">min_value</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Place-the-Ego-Vehicle-">Place the Ego Vehicle <a class="anchor" id="place_ego"></a><a class="anchor-link" href="#Place-the-Ego-Vehicle-">¶</a></h3><p>Here, we will use a <code>LaneSpawnPolicy</code> to request a position for our ego. This means that rather than passing an explicit map location, we can have the ego spawn on a given lane type based on probability. In this example, we simply set a 1.0 probability of spawning the ego on a <code>Drivable</code> lane. Other options for lane types can be found in our documentation.</p>
+<p>Once the ego is placed in the scene, we can capture the scenario through our sensor rig.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Place ourselves in the world</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">add_ego</span><span class="p">(</span>
+    <span class="n">generator</span><span class="o">=</span><span class="n">EgoAgentGeneratorParameters</span><span class="p">(</span>
+        <span class="n">agent_type</span><span class="o">=</span><span class="n">AgentType</span><span class="o">.</span><span class="n">VEHICLE</span><span class="p">,</span>
+        <span class="n">position_request</span><span class="o">=</span><span class="n">PositionRequest</span><span class="p">(</span>
+            <span class="n">lane_spawn_policy</span><span class="o">=</span><span class="n">LaneSpawnPolicy</span><span class="p">(</span>
+                <span class="n">lane_type</span><span class="o">=</span><span class="n">EnumDistribution</span><span class="p">(</span>
+                    <span class="n">probabilities</span><span class="o">=</span><span class="p">{</span><span class="s2">"Drivable"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[7]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>&lt;pd.data_lab.scenario.Scenario at 0x29637500940&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><em>Example of ego vehicle in an empty daytime scene</em></p>
+<p><img alt="Example empty scene" src="./resources/images/01_data_lab_overview/overview_empty.jpg"/></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Place-Parked-Vehicles-">Place Parked Vehicles <a class="anchor" id="place_parked_vehicles"></a><a class="anchor-link" href="#Place-Parked-Vehicles-">¶</a></h3><p>Now, we will make our first call to the scenario's <code>add_agents</code> method to place parked vehicles in the scenario. We will use a <code>CenterSpreadConfig</code> to establish the spawn probability, and a <code>LocationRelativePositionRequest</code> with the <code>"EGO"</code> agent tag in order to ensure these agents are spawned within our chosen radius around the ego's starting position. Setting this radius to an appropriately low value for the map will ensure that we do not waste time simulating agents that are not seen. Since we're loading an urban map with shorter sight lines, a radius of 150m should be enough.</p>
+<p>Note that in this notebook we will not be passing a <code>vehicle_distribution</code> to either the <code>ParkedVehicleGeneratorParameters</code> or the <code>TrafficGeneratorParameters</code>, so in both cases this will default to a value of <code>None</code>, resulting in the standard PD vehicle distribution that is appropriate for general use. For a demonstration on how to create a custom vehicle distribution for a special use case like spawning only 2-wheeled vehicles, please see <a href="https://github.com/parallel-domain/pd-sdk/blob/main/examples/data_lab/onroad/load_only_bicycles_and_motorcycles.py">this example script in the PD-SDK repo</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Place parked vehicles in the scene</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">add_agents</span><span class="p">(</span>
+    <span class="n">generator</span><span class="o">=</span><span class="n">ParkedVehicleGeneratorParameters</span><span class="p">(</span>
+        <span class="n">spawn_probability</span><span class="o">=</span><span class="n">CenterSpreadConfig</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">spread</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
+        <span class="n">vehicle_distribution</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">position_request</span><span class="o">=</span><span class="n">PositionRequest</span><span class="p">(</span>
+            <span class="n">location_relative_position_request</span><span class="o">=</span><span class="n">LocationRelativePositionRequest</span><span class="p">(</span>
+                <span class="n">agent_tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"EGO"</span><span class="p">],</span>
+                <span class="n">max_spawn_radius</span><span class="o">=</span><span class="mf">150.0</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[8]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>&lt;pd.data_lab.scenario.Scenario at 0x29637500940&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><em>Daytime scene with parked vehicles added</em></p>
+<p><img alt="Example scene with parked cars" src="./resources/images/01_data_lab_overview/overview_parked.jpg"/></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Place-Traffic-">Place Traffic <a class="anchor" id="place_traffic"></a><a class="anchor-link" href="#Place-Traffic-">¶</a></h3><p>Now we will use the <code>add_agents</code> method again, this time using a different generator which will spawn traffic in our scenario. Like for our parked vehicles, we will set the ego to be the epicenter of traffic spawning, with a <code>max_spawn_radius</code> of 150m.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Place traffic in the scene</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">add_agents</span><span class="p">(</span>
+    <span class="n">generator</span><span class="o">=</span><span class="n">TrafficGeneratorParameters</span><span class="p">(</span>
+        <span class="n">spawn_probability</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+        <span class="n">vehicle_distribution</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">position_request</span><span class="o">=</span><span class="n">PositionRequest</span><span class="p">(</span>
+            <span class="n">location_relative_position_request</span><span class="o">=</span><span class="n">LocationRelativePositionRequest</span><span class="p">(</span>
+                <span class="n">agent_tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"EGO"</span><span class="p">],</span>
+                <span class="n">max_spawn_radius</span><span class="o">=</span><span class="mf">150.0</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>&lt;pd.data_lab.scenario.Scenario at 0x29637500940&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><em>Daytime scene with parked vehicles and traffic</em></p>
+<p><img alt="Example scene with parked vehicles and traffic" src="./resources/images/01_data_lab_overview/overview_traffic.jpg"/></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Place-Random-Pedestrians-">Place Random Pedestrians <a class="anchor" id="place_pedestrians"></a><a class="anchor-link" href="#Place-Random-Pedestrians-">¶</a></h3><p>Lastly, we will call the <code>add_agents</code> method once more to pass <code>RandomPedestrianGeneratorParameters</code>, which will allow us to populate the scene with a random scattering of pedestrians according to the parameters we pass. Here we will set a minimum and maximum number of pedestrians to spawn, as well as a speed range that we want them to obey. Again, we use a <code>LocationRelativePositionRequest</code> to place these pedestrians around the ego, keeping in mind to use a radius which is no larger than needed for the map and expected range of ego travel (based on the length of the scene).</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Place random pedestrians in the scene</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">add_agents</span><span class="p">(</span>
+    <span class="n">generator</span><span class="o">=</span><span class="n">RandomPedestrianGeneratorParameters</span><span class="p">(</span>
+        <span class="n">position_request</span><span class="o">=</span><span class="n">PositionRequest</span><span class="p">(</span>
+            <span class="n">location_relative_position_request</span><span class="o">=</span><span class="n">LocationRelativePositionRequest</span><span class="p">(</span>
+                <span class="n">agent_tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"EGO"</span><span class="p">],</span>
+                <span class="n">max_spawn_radius</span><span class="o">=</span><span class="mf">100.0</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">num_of_pedestrians_range</span><span class="o">=</span><span class="n">MinMaxConfigInt</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>
+        <span class="n">speed_range</span><span class="o">=</span><span class="n">MinMaxConfigFloat</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">1.1</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[10]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>&lt;pd.data_lab.scenario.Scenario at 0x29637500940&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><em>Daytime scene with pedestrians added</em></p>
+<p><img alt="Example scene with all agents added" src="./resources/images/01_data_lab_overview/overview_pedestrians.jpg"/></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Preview-Scenario-">Preview Scenario <a class="anchor" id="preview_scenario"></a><a class="anchor-link" href="#Preview-Scenario-">¶</a></h3><p>We can now quickly evaluate the scenario generation parameters we've come up with to see if a sample scene comes out looking the way that we want it to. Here we're looking for a general purpose urban driving scene with natural looking agent densities.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">data_lab</span><span class="o">.</span><span class="n">preview_scenario</span><span class="p">(</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span>
+    <span class="n">frames_per_scene</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">number_of_scenes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">sim_capture_rate</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">start_skip_frames</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">sim_instance</span><span class="o">=</span><span class="n">SimulationInstance</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"fsbapfxq"</span><span class="p">),</span>
+    <span class="n">render_instance</span><span class="o">=</span><span class="n">RenderInstance</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"fsbapfxq"</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[11]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div data-rrd="1" id="KgoTXK_rrd" style="display: none;"></div>
+<div id="KgoTXK_error" style="display: none;"><p>Timed out waiting for https://app.rerun.io/commit/9cf3033 to load.</p>
+<p>Consider using <code>rr.start_web_viewer_server()</code></p></div>
+<script>
+            KgoTXK_timeout = setTimeout(() => {
+                document.getElementById("KgoTXK_error").style.display = 'block';
+            }, 2000);
+
+            window.addEventListener("message", function(rrd) {
+                return async function KgoTXK_onIframeReady(event) {
+                    var iframe = document.getElementById("KgoTXK_iframe");
+                    if (event.source === iframe.contentWindow) {
+                        clearTimeout(KgoTXK_timeout);
+                        document.getElementById("KgoTXK_error").style.display = 'none';
+                        iframe.style.display = 'inline';
+                        window.removeEventListener("message", KgoTXK_onIframeReady);
+                        iframe.contentWindow.postMessage((await rrd), "*");
+                    }
+                }
+            }(async function() {
+                await new Promise(r => setTimeout(r, 0));
+                var div = document.getElementById("KgoTXK_rrd");
+                var base64Data = div.dataset.rrd;
+                var intermediate = atob(base64Data);
+                var buff = new Uint8Array(intermediate.length);
+                for (var i = 0; i < intermediate.length; i++) {
+                    buff[i] = intermediate.charCodeAt(i);
+                }
+                return buff;
+            }()));
+        </script>
+<iframe allowfullscreen="" frameborder="0" height="712" id="KgoTXK_iframe" src="https://app.rerun.io/commit/9cf3033?url=web_event://&amp;persist=0" style="display: none;" width="950"></iframe>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="4.-Create-a-Mini-Batch-and-Load-with-PD-SDK-">4. Create a Mini Batch and Load with PD-SDK <a class="anchor" id="mini_batch"></a><a class="anchor-link" href="#4.-Create-a-Mini-Batch-and-Load-with-PD-SDK-">¶</a></h2><p>Now we will take our scenario object and pass it to the data lab API to generate a couple of scenes with it, and write these out into a dataset which we can load with the PD-SDK.</p>
+<p>The <code>create_mini_batch</code> method will help us to establish some key parameters of the simulation and rendering process:</p>
+<ul>
+<li>The <code>frames_per_scene</code> will instruct the number of frames to render, and in conjunction with the <code>sim_capture_rate</code>, will dictate the length of the scene in seconds.</li>
+<li>The <code>sim_capture_rate</code> establishes the framerate of data capture. Our simulation runs at 100Hz, so a <code>sim_capture_rate</code> of 10 will capture each 10th frame, giving us a 10Hz framerate.<ul>
+<li>Alternatively, if we set a <code>sim_capture_rate</code> of 20, we would capture each 20th frame, giving us 100Hz / 20 = 5Hz dataset.</li>
+<li>To understand the length of our scene, we consider the <code>frames_per_scene</code> and <code>sim_capture_rate</code> together. For example, if we have established 10 frames per scene at a 10Hz framerate, our scene will be 1 second long.</li>
+</ul>
+</li>
+<li>The <code>start_skip_frames</code> gives the agent animations and environmental effects a bit of lead time before frame capture begins, which leads to a more natural first capture frame. 15 is a good value for this.</li>
+<li>Make sure to pass the name of your Data Lab instance to the <code>sim_instance</code> and <code>render_instance</code> parameters, and establish a output path where you can find the rendered dataset on completion.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Render-and-Save-Mini-Batch-">Render and Save Mini Batch <a class="anchor" id="render_and_save"></a><a class="anchor-link" href="#Render-and-Save-Mini-Batch-">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">OUTPUT_DATASET_PATH</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"D:/data_lab_output_230724/</span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">/seed_</span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2">"</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">data_lab</span><span class="o">.</span><span class="n">create_mini_batch</span><span class="p">(</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span>
+    <span class="n">frames_per_scene</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">number_of_scenes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">show_image_for_n_seconds</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">sim_capture_rate</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">start_skip_frames</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">sim_instance</span><span class="o">=</span><span class="n">SimulationInstance</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"fsbapfxq"</span><span class="p">),</span>
+    <span class="n">render_instance</span><span class="o">=</span><span class="n">RenderInstance</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"fsbapfxq"</span><span class="p">),</span>
+    <span class="n">format_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">dataset_output_path</span><span class="o">=</span><span class="n">OUTPUT_DATASET_PATH</span><span class="p">,</span>
+        <span class="n">encode_to_binary</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">pipeline_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">copy_all_available_sensors_and_annotations</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">run_env</span><span class="o">=</span><span class="s2">"thread"</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>
+
+Encoding Progress: 0 sensor frames [00:00, ? sensor frames/s]</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre><span class="ansi-green-fg">2023-07-24 09:55:21</span> <span class="ansi-blue-fg">paralleldomain.encoding.stream_pipeline_builder[build_pipeline_source_generator]</span> <span class="ansi-black-intense-fg ansi-bold">INFO</span> Encoding Scene Step Stream
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>Encoding Progress: 7 sensor frames [03:15, 27.90s/ sensor frames]
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Load-the-dataset-using-PD-SDK-">Load the dataset using PD-SDK <a class="anchor" id="load_w_pd_sdk"></a><a class="anchor-link" href="#Load-the-dataset-using-PD-SDK-">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">DGPDatasetDecoder</span><span class="p">(</span><span class="n">OUTPUT_DATASET_PATH</span><span class="p">)</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="With-a-dataset-object-loaded,-we-can-index-the-scenes,-frames,-and-cameras-to-explore-our-data.-We-can-use-the-show_scene-visualization-function-to-get-a-look-at-our-first-scene.">With a dataset object loaded, we can index the scenes, frames, and cameras to explore our data. We can use the <code>show_scene</code> visualization function to get a look at our first scene.<a class="anchor-link" href="#With-a-dataset-object-loaded,-we-can-index-the-scenes,-frames,-and-cameras-to-explore-our-data.-We-can-use-the-show_scene-visualization-function-to-get-a-look-at-our-first-scene.">¶</a></h4>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Loading and visualizing a scene (outputs interactive visualizer seen at top of notebook)</span>
+<span class="n">scene</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">get_scene</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">scene_names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">show_scene</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[15]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div data-rrd="2" id="lQIUPJ_rrd" style="display: none;"></div>
+<div id="lQIUPJ_error" style="display: none;"><p>Timed out waiting for https://app.rerun.io/commit/9cf3033 to load.</p>
+<p>Consider using <code>rr.start_web_viewer_server()</code></p></div>
+<script>
+            lQIUPJ_timeout = setTimeout(() => {
+                document.getElementById("lQIUPJ_error").style.display = 'block';
+            }, 2000);
+
+            window.addEventListener("message", function(rrd) {
+                return async function lQIUPJ_onIframeReady(event) {
+                    var iframe = document.getElementById("lQIUPJ_iframe");
+                    if (event.source === iframe.contentWindow) {
+                        clearTimeout(lQIUPJ_timeout);
+                        document.getElementById("lQIUPJ_error").style.display = 'none';
+                        iframe.style.display = 'inline';
+                        window.removeEventListener("message", lQIUPJ_onIframeReady);
+                        iframe.contentWindow.postMessage((await rrd), "*");
+                    }
+                }
+            }(async function() {
+                await new Promise(r => setTimeout(r, 0));
+                var div = document.getElementById("lQIUPJ_rrd");
+                var base64Data = div.dataset.rrd;
+                var intermediate = atob(base64Data);
+                var buff = new Uint8Array(intermediate.length);
+                for (var i = 0; i < intermediate.length; i++) {
+                    buff[i] = intermediate.charCodeAt(i);
+                }
+                return buff;
+            }()));
+        </script>
+<iframe allowfullscreen="" frameborder="0" height="712" id="lQIUPJ_iframe" src="https://app.rerun.io/commit/9cf3033?url=web_event://&amp;persist=0" style="display: none;" width="950"></iframe>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="5.-Making-your-own-General-Purpose-Driving-Scene-Script-">5. Making your own General Purpose Driving Scene Script <a class="anchor" id="make_your_own"></a><a class="anchor-link" href="#5.-Making-your-own-General-Purpose-Driving-Scene-Script-">¶</a></h2><p>For a template to get started on making your own general purpose driving scenario Data Lab script, please see the <a href="https://github.com/parallel-domain/pd-sdk/blob/main/examples/data_lab/onroad/load_default_vehicle_distribution.py">example in the PD-SDK repo</a>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

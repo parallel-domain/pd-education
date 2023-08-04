@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head></head>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
+<main>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h1 id="Debris-Notebook">Debris Notebook<a class="anchor-link" href="#Debris-Notebook">¶</a></h1><p>In this notebook, we will generate data for debris detection. We can use the <code>DebrisGeneratorParameters</code> to easily spawn debris around the vehicle with adjustable density on any base scenario, but we may want to control the types of debris that we spawn in the scene. This gives us our first opportunity to explore querying the asset registry to find lists of asset names that match our requests.</p>
+<p><img alt="Example debris scene" src="./resources/images/03_debris/debris_scene.jpg"/></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Notebook-Outline">Notebook Outline<a class="anchor-link" href="#Notebook-Outline">¶</a></h2><ol>
+<li><a href="#imports_and_setup">Imports and Setup</a><ol>
+<li><a href="#import_dependencies">Import Dependencies</a></li>
+<li><a href="#setup_datalab">Setup Data Lab</a></li>
+</ol>
+</li>
+<li><a href="#debris_asset_function">Create Function to Get Debris Assets using Keywords</a></li>
+<li><a href="#scenario_gen">Generate a Scenario</a><ol>
+<li><a href="#scenario_base">Build Base Scenario with Helper Function</a></li>
+<li><a href="#scenario_debris">Place Debris in the Scenario</a></li>
+</ol>
+</li>
+<li><a href="#mini_batch">Create a Mini Batch</a><ol>
+<li><a href="#mini_batch_render">Render and Save Mini Batch</a></li>
+<li><a href="#mini_batch_load">Load with PD-SDK</a></li>
+</ol>
+</li>
+<li><a href="#debris_examples">More Examples</a></li>
+<li><a href="#build_your_own">Build Your Own Debris Data Lab Script</a></li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="1.-Imports-and-Setup-">1. Imports and Setup <a class="anchor" id="imports_and_setup"></a><a class="anchor-link" href="#1.-Imports-and-Setup-">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Import-Dependencies-">Import Dependencies <a class="anchor" id="import_dependencies"></a><a class="anchor-link" href="#Import-Dependencies-">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">pd.data_lab.context</span> <span class="kn">import</span> <span class="n">setup_datalab</span>
+<span class="kn">from</span> <span class="nn">pd.data_lab.render_instance</span> <span class="kn">import</span> <span class="n">RenderInstance</span>
+<span class="kn">from</span> <span class="nn">pd.data_lab.sim_instance</span> <span class="kn">import</span> <span class="n">SimulationInstance</span>
+<span class="kn">from</span> <span class="nn">pd.internal.assets.asset_registry</span> <span class="kn">import</span> <span class="n">InfoSegmentation</span><span class="p">,</span> <span class="n">UtilSegmentationCategoriesPanoptic</span>
+
+<span class="kn">import</span> <span class="nn">paralleldomain.data_lab</span> <span class="k">as</span> <span class="nn">data_lab</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.data_lab.generators.debris</span> <span class="kn">import</span> <span class="n">DebrisGeneratorParameters</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.data_lab.generators.position_request</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LocationRelativePositionRequest</span><span class="p">,</span>
+    <span class="n">PositionRequest</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.decoding.dgp.decoder</span> <span class="kn">import</span> <span class="n">DGPDatasetDecoder</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.model.annotation</span> <span class="kn">import</span> <span class="n">SemanticSegmentation2D</span><span class="p">,</span> <span class="n">InstanceSegmentation2D</span><span class="p">,</span> <span class="n">Depth</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.utilities.logging</span> <span class="kn">import</span> <span class="n">setup_loggers</span>
+<span class="kn">from</span> <span class="nn">paralleldomain.visualization.model_visualization</span> <span class="kn">import</span> <span class="n">show_scene</span>
+
+<span class="kn">from</span> <span class="nn">resources.notebook_utils</span> <span class="kn">import</span> <span class="n">build_demo_scenario</span>
+
+<span class="n">setup_loggers</span><span class="p">(</span><span class="n">logger_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"__main__"</span><span class="p">,</span> <span class="s2">"paralleldomain"</span><span class="p">,</span> <span class="s2">"pd"</span><span class="p">])</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"pd"</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Setup-Data-Lab-">Setup Data Lab <a class="anchor" id="setup_datalab"></a><a class="anchor-link" href="#Setup-Data-Lab-">¶</a></h3><p>Make sure the location version matches what you have loaded on your data lab instance.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">LOCATION_VERSION</span> <span class="o">=</span> <span class="s2">"v2.2.0-beta"</span>
+<span class="n">setup_datalab</span><span class="p">(</span><span class="n">LOCATION_VERSION</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="2.-Create-Function-to-Get-Debris-Assets-using-Keywords-">2. Create Function to Get Debris Assets using Keywords <a class="anchor" id="debris_asset_function"></a><a class="anchor-link" href="#2.-Create-Function-to-Get-Debris-Assets-using-Keywords-">¶</a></h2><p>The names of our debris assets are highly descriptive and live in our asset registry. We can create a function which returns the names of assets based on whether their names contain keywords.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_debris_objects</span><span class="p">(</span><span class="n">keywords</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">use_exact_kws</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="c1"># query specific assets from PD's asset registry and use as csv input for Debris generator</span>
+    <span class="n">othermovable_panoptic_id</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">pan_id</span> <span class="k">for</span> <span class="n">pan_id</span> <span class="ow">in</span>
+        <span class="n">UtilSegmentationCategoriesPanoptic</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">UtilSegmentationCategoriesPanoptic</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"OtherMovable"</span>
+        <span class="p">)</span>
+    <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">debris_panoptic_id</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">pan_id</span> <span class="k">for</span> <span class="n">pan_id</span> <span class="ow">in</span>
+        <span class="n">UtilSegmentationCategoriesPanoptic</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">UtilSegmentationCategoriesPanoptic</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"Debris"</span>
+        <span class="p">)</span>
+    <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">othermovable_assets</span> <span class="o">=</span> <span class="n">InfoSegmentation</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">InfoSegmentation</span><span class="o">.</span><span class="n">panoptic_id</span> <span class="o">==</span> <span class="n">othermovable_panoptic_id</span><span class="p">)</span>
+    <span class="n">debris_assets</span> <span class="o">=</span> <span class="n">InfoSegmentation</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">InfoSegmentation</span><span class="o">.</span><span class="n">panoptic_id</span> <span class="o">==</span> <span class="n">debris_panoptic_id</span><span class="p">)</span>
+    <span class="n">othermovable_assets</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">othermovable_assets</span><span class="p">]</span>
+    <span class="n">debris_assets</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">debris_assets</span><span class="p">]</span>
+    <span class="n">asset_names</span> <span class="o">=</span> <span class="n">othermovable_assets</span> <span class="o">+</span> <span class="n">debris_assets</span>
+
+    <span class="k">def</span> <span class="nf">treat_kw</span><span class="p">(</span><span class="n">kw</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">use_exact_kws</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">kw</span>
+        <span class="k">return</span> <span class="n">kw</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">keywords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">asset_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">an</span> <span class="k">for</span> <span class="n">an</span> <span class="ow">in</span> <span class="n">asset_names</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">treat_kw</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span> <span class="ow">in</span> <span class="n">treat_kw</span><span class="p">(</span><span class="n">an</span><span class="p">)</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">keywords</span><span class="p">)]</span>
+
+    <span class="n">asset_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">an</span> <span class="k">for</span> <span class="n">an</span> <span class="ow">in</span> <span class="n">asset_names</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="s2">"Plywood"</span> <span class="ow">in</span> <span class="n">an</span> <span class="ow">and</span> <span class="s2">"fallen_over"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">an</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">asset_names</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="3.-Generate-a-Scenario-">3. Generate a Scenario <a class="anchor" id="scenario_gen"></a><a class="anchor-link" href="#3.-Generate-a-Scenario-">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Build-base-scenario-with-helper-function-">Build base scenario with helper function <a class="anchor" id="scenario_base"></a><a class="anchor-link" href="#Build-base-scenario-with-helper-function-">¶</a></h3><p>Rather than repeating the process we saw in the last notebook of loading the map, weather, and agents onto the map, we've wrapped the process into a function, and we'll use that here to quickly build a base scene to work with reactor on. To review what is happening inside the function, see the definition in <code>notebook_utils.py</code>.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">location_name</span> <span class="o">=</span> <span class="s2">"SF_GrantAndCalifornia"</span>
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">389746</span>  <span class="c1"># random.randint(1, 1_000_000)</span>
+<span class="n">scenario</span> <span class="o">=</span> <span class="n">build_demo_scenario</span><span class="p">(</span><span class="n">location_name</span><span class="o">=</span><span class="n">location_name</span><span class="p">,</span> <span class="n">location_version</span><span class="o">=</span><span class="n">LOCATION_VERSION</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Using random seed 389744 on SF_GrantAndCalifornia
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Place-Debris-in-the-Scenario-">Place Debris in the Scenario <a class="anchor" id="scenario_debris"></a><a class="anchor-link" href="#Place-Debris-in-the-Scenario-">¶</a></h3><p>We can now use the scenario's <code>add_objects</code> method along with <code>DebrisGeneratorParameters</code> to place debris in the scene. First, we'll get a list of asset names using our function and some keywords for the type of debris we'd like to see. We can then pass this list as a comma-separated string to the <code>debris_asset_tag</code> parameter of the debris generator.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Using our helper function to give us debris objects matching our keywords</span>
+<span class="n">debris_objects</span> <span class="o">=</span> <span class="n">get_debris_objects</span><span class="p">(</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">"cardboard"</span><span class="p">,</span>
+        <span class="s2">"trash"</span><span class="p">,</span>
+        <span class="s2">"bottle"</span><span class="p">,</span>
+        <span class="s2">"car parts"</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Using a LocationRelativePositionRequest, we can place debris around the ego vehicle where the sensor rig can see it.</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">add_objects</span><span class="p">(</span>
+    <span class="n">generator</span><span class="o">=</span><span class="n">DebrisGeneratorParameters</span><span class="p">(</span>
+        <span class="n">spawn_probability</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">min_debris_distance</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">max_debris_distance</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
+        <span class="n">debris_asset_tag</span><span class="o">=</span><span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">debris_objects</span><span class="p">),</span>
+        <span class="n">position_request</span><span class="o">=</span><span class="n">PositionRequest</span><span class="p">(</span>
+            <span class="n">location_relative_position_request</span><span class="o">=</span><span class="n">LocationRelativePositionRequest</span><span class="p">(</span>
+                <span class="n">agent_tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"EGO"</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[6]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>&lt;pd.data_lab.scenario.Scenario at 0x1e1d2157af0&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="4.-Create-a-Mini-Batch-">4. Create a Mini Batch <a class="anchor" id="mini_batch"></a><a class="anchor-link" href="#4.-Create-a-Mini-Batch-">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Render-and-Save-Mini-Batch-">Render and Save Mini Batch <a class="anchor" id="mini_batch_render"></a><a class="anchor-link" href="#Render-and-Save-Mini-Batch-">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">OUTPUT_DATASET_PATH</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"./debris_output/</span><span class="si">{</span><span class="n">location_name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2">/"</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">data_lab</span><span class="o">.</span><span class="n">create_mini_batch</span><span class="p">(</span>
+    <span class="n">scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span>
+    <span class="n">frames_per_scene</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">number_of_scenes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">show_image_for_n_seconds</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">sim_capture_rate</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">start_skip_frames</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">sim_instance</span><span class="o">=</span><span class="n">SimulationInstance</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"fsbapfxq"</span><span class="p">),</span>
+    <span class="n">render_instance</span><span class="o">=</span><span class="n">RenderInstance</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"fsbapfxq"</span><span class="p">),</span>
+    <span class="n">format_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">dataset_output_path</span><span class="o">=</span><span class="n">OUTPUT_DATASET_PATH</span><span class="p">,</span>
+        <span class="n">encode_to_binary</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">pipeline_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">copy_all_available_sensors_and_annotations</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">run_env</span><span class="o">=</span><span class="s2">"thread"</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>
+
+Encoding Progress: 0 sensor frames [00:00, ? sensor frames/s]</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre><span class="ansi-green-fg">2023-07-24 11:01:01</span> <span class="ansi-blue-fg">paralleldomain.encoding.stream_pipeline_builder[build_pipeline_source_generator]</span> <span class="ansi-black-intense-fg ansi-bold">INFO</span> Encoding Scene Step Stream
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>Encoding Progress: 9 sensor frames [08:31, 56.82s/ sensor frames]
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Load-with-PD-SDK-">Load with PD-SDK <a class="anchor" id="mini_batch_load"></a><a class="anchor-link" href="#Load-with-PD-SDK-">¶</a></h3>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Load the minibatch with PD-SDK and isolate a scene to visualize</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">DGPDatasetDecoder</span><span class="p">(</span><span class="n">OUTPUT_DATASET_PATH</span><span class="p">)</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">()</span>
+<span class="n">scene</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">get_scene</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">scene_names</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">show_scene</span><span class="p">(</span><span class="n">scene</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[15]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div data-rrd="1" id="bBuRfQ_rrd" style="display: none;"></div>
+<div id="bBuRfQ_error" style="display: none;"><p>Timed out waiting for https://app.rerun.io/commit/9cf3033 to load.</p>
+<p>Consider using <code>rr.start_web_viewer_server()</code></p></div>
+<script>
+            bBuRfQ_timeout = setTimeout(() => {
+                document.getElementById("bBuRfQ_error").style.display = 'block';
+            }, 2000);
+
+            window.addEventListener("message", function(rrd) {
+                return async function bBuRfQ_onIframeReady(event) {
+                    var iframe = document.getElementById("bBuRfQ_iframe");
+                    if (event.source === iframe.contentWindow) {
+                        clearTimeout(bBuRfQ_timeout);
+                        document.getElementById("bBuRfQ_error").style.display = 'none';
+                        iframe.style.display = 'inline';
+                        window.removeEventListener("message", bBuRfQ_onIframeReady);
+                        iframe.contentWindow.postMessage((await rrd), "*");
+                    }
+                }
+            }(async function() {
+                await new Promise(r => setTimeout(r, 0));
+                var div = document.getElementById("bBuRfQ_rrd");
+                var base64Data = div.dataset.rrd;
+                var intermediate = atob(base64Data);
+                var buff = new Uint8Array(intermediate.length);
+                for (var i = 0; i < intermediate.length; i++) {
+                    buff[i] = intermediate.charCodeAt(i);
+                }
+                return buff;
+            }()));
+        </script>
+<iframe allowfullscreen="" frameborder="0" height="712" id="bBuRfQ_iframe" src="https://app.rerun.io/commit/9cf3033?url=web_event://&amp;persist=0" style="display: none;" width="950"></iframe>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="5.-More-Examples-">5. More Examples <a class="anchor" id="debris_examples"></a><a class="anchor-link" href="#5.-More-Examples-">¶</a></h2><p>Below are more examples of debris scenes. For a template script to begin building your own debris scenes, please see the PD-SDK <a href="https://github.com/parallel-domain/pd-sdk/blob/main/examples/data_lab/onroad/debris_placed_around_ego_vehicle.py">debris example script</a>.</p>
+<p><img alt="Debris Example 1" src="./resources/images/03_debris/debris1.jpg"/>
+<img alt="Debris Example 2" src="./resources/images/03_debris/debris2.jpg"/>
+<img alt="Debris Example 3" src="./resources/images/03_debris/debris3.jpg"/>
+<img alt="Debris Example 4" src="./resources/images/03_debris/debris4.jpg"/></p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="6.-Build-Your-Own-Debris-Data-Lab-Script-">6. Build Your Own Debris Data Lab Script <a class="anchor" id="build_your_own"></a><a class="anchor-link" href="#6.-Build-Your-Own-Debris-Data-Lab-Script-">¶</a></h2><p>For building your own script to create debris scenes using Data Lab, use <a href="https://github.com/parallel-domain/pd-sdk/blob/main/examples/data_lab/onroad/debris_placed_around_ego_vehicle.py">the example script in the PD-SDK</a> as a starting point.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>
