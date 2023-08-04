@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 
 <html lang="en">
 <head></head>
@@ -10,7 +11,7 @@
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="Pedestrian-Edge-Cases">Pedestrian Edge Cases<a class="anchor-link" href="#Pedestrian-Edge-Cases">¶</a></h1><p>Pedestrians are a staple in any complete Data Lab driving scene, but typically they are confined to the sidewalks and crosswalks, as in your typical real-world driving scenario. For our models to be robust, we need to cover training examples with pedestrians who <em>aren't</em> where they're supposed to be.</p>
-<p><img alt="Example scenario" src="./resources/images/05_pedestrians/pedestrian.jpg"/></p>
+<p><img alt="Example scenario" src="./images/pedestrians_around_ego/pedestrian.jpg"/></p>
 <p>We'll cover 2 types of pedestrian scenarios:</p>
 <ol>
 <li>Multiple pedestrians standing in front of ego</li>
@@ -34,15 +35,15 @@
 </li>
 <li><a href="#asset_function">Define asset query function</a></li>
 <li><a href="#scenario1">Scenario 1: multiple pedestrians in front of ego</a><ol>
-<li><a href="#scenario1_init">Initialize scenario &amp; configure environment</a></li>
+<li><a href="#scenario1_init">Initialize Scenario 1 &amp; configure environment</a></li>
 <li><a href="#scenario1_add_peds">Add pedestrians in front of ego vehicle</a></li>
-<li><a href="#scenario1_preview">Preview Scenario</a></li>
+<li><a href="#scenario1_preview">Preview Scenario 1</a></li>
 </ol>
 </li>
 <li><a href="#scenario2">Scenario 2: single child in front of ego</a><ol>
-<li><a href="#scenario2_init">Initialize scenario &amp; configure environment</a></li>
+<li><a href="#scenario2_init">Initialize Scenario 2 &amp; configure environment</a></li>
 <li><a href="#scenario2_add_child">Place a single child in front of ego</a></li>
-<li><a href="#scenario2_preview">Preview Scenario</a></li>
+<li><a href="#scenario2_preview">Preview Scenario 2</a></li>
 </ol>
 </li>
 <li><a href="#build_your_own">Building your own pedestrian Data Lab script</a></li>
@@ -99,7 +100,7 @@
 <span class="kn">from</span> <span class="nn">pd.data_lab.render_instance</span> <span class="kn">import</span> <span class="n">RenderInstance</span>
 <span class="kn">from</span> <span class="nn">pd.data_lab.sim_instance</span> <span class="kn">import</span> <span class="n">SimulationInstance</span>
 
-<span class="kn">from</span> <span class="nn">resources.notebook_utils</span> <span class="kn">import</span> <span class="n">build_demo_scenario</span>
+<span class="kn">from</span> <span class="nn">pd_education.data_lab.notebook_utils</span> <span class="kn">import</span> <span class="n">build_demo_scenario</span>
 </pre></div>
 </div>
 </div>
@@ -169,7 +170,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-Scenario-1:-multiple-pedestrians-in-front-of-ego-">3. Scenario 1: multiple pedestrians in front of ego <a class="anchor" id="scenario1"></a><a class="anchor-link" href="#3.-Scenario-1:-multiple-pedestrians-in-front-of-ego-">¶</a></h2><p><img alt="Example of multiple pedestrians" src="./resources/images/05_pedestrians/pedestrians_multiple.jpg"/>
+<h2 id="3.-Scenario-1:-multiple-pedestrians-in-front-of-ego-">3. Scenario 1: multiple pedestrians in front of ego <a class="anchor" id="scenario1"></a><a class="anchor-link" href="#3.-Scenario-1:-multiple-pedestrians-in-front-of-ego-">¶</a></h2><p><img alt="Example of multiple pedestrians" src="./images/pedestrians_around_ego/pedestrians_multiple.jpg"/>
 <em>Example output</em></p>
 </div>
 </div>
@@ -181,7 +182,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Initialize-scenario-&amp;-configure-environment-">Initialize scenario &amp; configure environment <a class="anchor" id="scenario1_init"></a><a class="anchor-link" href="#Initialize-scenario-&amp;-configure-environment-">¶</a></h3><p>We can use our helper function to build a base scene, and adjust the time of day.</p>
+<h3 id="Initialize-Scenario-1-&amp;-configure-environment-">Initialize Scenario 1 &amp; configure environment <a class="anchor" id="scenario1_init"></a><a class="anchor-link" href="#Initialize-Scenario-1-&amp;-configure-environment-">¶</a></h3><p>We can use our helper function to build a base scene, and adjust the time of day.</p>
 </div>
 </div>
 </div>
@@ -269,7 +270,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Preview-Scenario-">Preview Scenario <a class="anchor" id="scenario1_preview"></a><a class="anchor-link" href="#Preview-Scenario-">¶</a></h3><p>Include semantic segmentation, instance segmentation, and depth annotations</p>
+<h3 id="Preview-Scenario-1-">Preview Scenario 1 <a class="anchor" id="scenario1_preview"></a><a class="anchor-link" href="#Preview-Scenario-1-">¶</a></h3><p>Include semantic segmentation, instance segmentation, and depth annotations</p>
 </div>
 </div>
 </div>
@@ -344,7 +345,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4.-Scenario-2:-single-child-in-front-of-ego-">4. Scenario 2: single child in front of ego <a class="anchor" id="scenario2"></a><a class="anchor-link" href="#4.-Scenario-2:-single-child-in-front-of-ego-">¶</a></h2><p><img alt="Example of single child" src="./resources/images/05_pedestrians/pedestrian.jpg"/>
+<h2 id="4.-Scenario-2:-single-child-in-front-of-ego-">4. Scenario 2: single child in front of ego <a class="anchor" id="scenario2"></a><a class="anchor-link" href="#4.-Scenario-2:-single-child-in-front-of-ego-">¶</a></h2><p><img alt="Example of single child" src="./images/pedestrians_around_ego/pedestrian.jpg"/>
 <em>Example output</em></p>
 </div>
 </div>
@@ -356,7 +357,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Initialize-scenario-&amp;-configure-environment-">Initialize scenario &amp; configure environment <a class="anchor" id="scenario2_init"></a><a class="anchor-link" href="#Initialize-scenario-&amp;-configure-environment-">¶</a></h3><p>We will change to a daytime rain scenario by setting the time of day category weights and other environment parameters.</p>
+<h3 id="Initialize-Scenario-2-&amp;-configure-environment-">Initialize Scenario 2 &amp; configure environment <a class="anchor" id="scenario2_init"></a><a class="anchor-link" href="#Initialize-Scenario-2-&amp;-configure-environment-">¶</a></h3><p>We will change to a daytime rain scenario by setting the time of day category weights and other environment parameters.</p>
 </div>
 </div>
 </div>
@@ -455,7 +456,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Preview-Scenario-">Preview Scenario <a class="anchor" id="scenario2_preview"></a><a class="anchor-link" href="#Preview-Scenario-">¶</a></h3>
+<h3 id="Preview-Scenario-2-">Preview Scenario 2 <a class="anchor" id="scenario2_preview"></a><a class="anchor-link" href="#Preview-Scenario-2-">¶</a></h3>
 </div>
 </div>
 </div>

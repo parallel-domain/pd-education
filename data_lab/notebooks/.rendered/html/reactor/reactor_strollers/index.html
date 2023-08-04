@@ -11,7 +11,7 @@
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="Reactor-Stroller-Experiment">Reactor Stroller Experiment<a class="anchor-link" href="#Reactor-Stroller-Experiment">¶</a></h1><p>Now it is time for a more advanced use of Reactor. This time we will use map information to determine sidewalk points, place a stroller on on that is visible to the ego, and place a pedestrian next to this stroller for realistic scene context. We will then see a comparative performance improvement of a semantic segmentation network (DeepLabV3) on the stroller class when trained on frames generated with Data Lab vs the same model trained on the nuImages dataset.</p>
-<p><img alt="Example of stroller scene" src="./resources/images/08_reactor_strollers/reactor_strollers.jpg"/></p>
+<p><img alt="Example of stroller scene" src="./images/reactor_strollers/reactor_strollers.jpg"/></p>
 </div>
 </div>
 </div>
@@ -110,7 +110,7 @@
 <span class="kn">from</span> <span class="nn">paralleldomain.utilities.transformation</span> <span class="kn">import</span> <span class="n">Transformation</span>
 <span class="kn">from</span> <span class="nn">paralleldomain.visualization.model_visualization</span> <span class="kn">import</span> <span class="n">show_scene</span>
 
-<span class="kn">from</span> <span class="nn">resources.notebook_utils</span> <span class="kn">import</span> <span class="n">FOV</span><span class="p">,</span> <span class="n">build_empty_scenario</span><span class="p">,</span> <span class="n">build_demo_scenario</span>
+<span class="kn">from</span> <span class="nn">pd_education.data_lab.notebook_utils</span> <span class="kn">import</span> <span class="n">FOV</span><span class="p">,</span> <span class="n">build_empty_scenario</span><span class="p">,</span> <span class="n">build_demo_scenario</span>
 
 <span class="n">setup_loggers</span><span class="p">(</span><span class="n">logger_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"__main__"</span><span class="p">,</span> <span class="s2">"paralleldomain"</span><span class="p">])</span>
 <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">"pd"</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">)</span>
@@ -510,7 +510,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="Inspect-the-placement-of-the-proxy-object-using-the-custom-behavior-">Inspect the placement of the proxy object using the custom behavior <a class="anchor" id="test_scenario_proxy_inspect"></a><a class="anchor-link" href="#Inspect-the-placement-of-the-proxy-object-using-the-custom-behavior-">¶</a></h4><p><img alt="Proxy object test" src="./resources/images/08_reactor_strollers/reactor_strollers_empty.jpg"/>
+<h4 id="Inspect-the-placement-of-the-proxy-object-using-the-custom-behavior-">Inspect the placement of the proxy object using the custom behavior <a class="anchor" id="test_scenario_proxy_inspect"></a><a class="anchor-link" href="#Inspect-the-placement-of-the-proxy-object-using-the-custom-behavior-">¶</a></h4><p><img alt="Proxy object test" src="./images/reactor_strollers/reactor_strollers_empty.jpg"/>
 <em>Example output of empty scene with proxy placed</em></p>
 </div>
 </div>
@@ -564,7 +564,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="Inspect-the-placement-of-the-proxy-object-and-the-pedestrian-using-new-behavior-">Inspect the placement of the proxy object and the pedestrian using new behavior <a class="anchor" id="test_scenario_w_ped_inspect"></a><a class="anchor-link" href="#Inspect-the-placement-of-the-proxy-object-and-the-pedestrian-using-new-behavior-">¶</a></h4><p><img alt="Proxy with pedestrian" src="./resources/images/08_reactor_strollers/reactor_strollers_w_ped.jpg"/>
+<h4 id="Inspect-the-placement-of-the-proxy-object-and-the-pedestrian-using-new-behavior-">Inspect the placement of the proxy object and the pedestrian using new behavior <a class="anchor" id="test_scenario_w_ped_inspect"></a><a class="anchor-link" href="#Inspect-the-placement-of-the-proxy-object-and-the-pedestrian-using-new-behavior-">¶</a></h4><p><img alt="Proxy with pedestrian" src="./images/reactor_strollers/reactor_strollers_w_ped.jpg"/>
 <em>Example output of proxy placed with pedestrian</em></p>
 </div>
 </div>
@@ -647,7 +647,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="Inspecting-the-scene-with-other-agents-placed">Inspecting the scene with other agents placed<a class="anchor-link" href="#Inspecting-the-scene-with-other-agents-placed">¶</a></h4><p><img alt="Example of full scene" src="./resources/images/08_reactor_strollers/reactor_strollers_w_agents.jpg"/>
+<h4 id="Inspecting-the-scene-with-other-agents-placed">Inspecting the scene with other agents placed<a class="anchor-link" href="#Inspecting-the-scene-with-other-agents-placed">¶</a></h4><p><img alt="Example of full scene" src="./images/reactor_strollers/reactor_strollers_w_agents.jpg"/>
 <em>Example of scene with all agents placed</em></p>
 </div>
 </div>
@@ -903,7 +903,7 @@ As strollers are heavily undersampled in real world data we first created a targ
 <li>PD Reactor Dataset: 5000 images, 5000 images with strollers</li>
 </ul>
 <p>We trained an off-the-shelve deeplabV3 model for semantic segmentation. Hyperparameters are the same for all training sets.</p>
-<p><img alt="Stroller training results" src="./resources/images/08_reactor_strollers/reactor_strollers_plot_combined.jpg"/></p>
+<p><img alt="Stroller training results" src="./images/reactor_strollers/reactor_strollers_plot_combined.jpg"/></p>
 <p><strong>Using Reactor we are able to train a model that significantly and consistently outperforms the model trained on real world examples.</strong></p>
 </div>
 </div>
