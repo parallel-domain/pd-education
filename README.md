@@ -24,7 +24,7 @@ The PD-SDK provides an intuitive interface for loading and interacting with mach
 4. Activate your venv in your terminal by running one of the following:
     - Windows Powershell: `./venv/scripts/activate.ps1`
     - Linux: `./venv/bin/activate`
-5. Install requirements to your venv by running `pip install -r requirements.txt` in your terminal
+5. Install requirements to your venv by running `pip install .` in your terminal
 
 <br>
 
