@@ -1,0 +1,178 @@
+#!/usr/bin/env python
+
+"""
+Creates notebook directories to enable dynamic loading by the PD web app
+"""
+import configparser
+import json
+import os
+import subprocess
+from pathlib import Path
+
+CONFIG_LOCATION = 'config.ini'
+
+NON_CAPITALIZE = [
+    # articles
+    "a", "an", "the",
+    # coordinating conjunctions
+    "for", "and", "nor", "but", "or", "yet", "so"
+    # prepositions
+    "above",
+    "across",
+    "against",
+    "along",
+    "among",
+    "around",
+    "at",
+    "before",
+    "behind",
+    "below",
+    "beneath",
+    "beside",
+    "between",
+    "by",
+    "down",
+    "from",
+    "in",
+    "into",
+    "near",
+    "of",
+    "off",
+    "on",
+    "to",
+    "toward",
+    "under",
+    "upon",
+    "with",
+    "and",
+    "within",
+]
+
+
+def create_title(string):
+    ws = string.replace("_", " ").split(" ")
+    for i, w in enumerate(ws):
+        ws[i] = w.title() if i == 0 or w not in NON_CAPITALIZE else w
+
+    return " ".join(ws)
+
+
+def system_with_exitcode(*args, **kwargs):
+    """Run system command and return an exit code."""
+    kwargs.setdefault('stdout', subprocess.PIPE)
+    proc = subprocess.Popen(args, **kwargs)
+    out, err = proc.communicate()
+    return proc.returncode
+
+
+def scrape_description(file_path):
+
+    if os.path.exists(file_path):
+        with open(file_path) as f:
+            description = "".join(f.readlines())
+    else:
+        print(f"WARNING: No description file found for {file_path}")
+        nb_name = os.path.basename(os.path.dirname(os.path.dirname(file_path)))
+        description = create_title(nb_name) + " Tutorial"
+
+    return description
+
+
+def generate_directories(config):
+
+    repo_dir = os.path.dirname(__file__)
+    notebook_types = ["data_lab", "pd_sdk"]
+    directory_paths = []
+
+    for notebook_type in notebook_types:
+        html_path = os.path.join(
+            repo_dir,
+            config.get("schema", "output_path").format(
+                nb_type=notebook_type,
+                output_type="html",
+                nb_category="99999",
+                nb_name="99999"
+            ).split("99999")[0]
+        )
+        if not os.path.exists(html_path):
+            continue
+        directory = {notebook_type: []}
+        i = 0
+        for notebook_category in os.listdir(html_path):
+            if not os.path.isdir(os.path.join(html_path, notebook_category)):
+                continue
+            directory[notebook_type].append(
+                {
+                    "title": create_title(notebook_category),
+                    "slug": notebook_category.replace("_", "-"),
+                    "children": [],
+                }
+            )
+            category_path = os.path.join(html_path, notebook_category)
+            for notebook_name in os.listdir(category_path):
+                directory[notebook_type][i]["children"].append(
+                    {
+                        "title": create_title(notebook_name),
+                        "slug": notebook_name.replace("_", "-"),
+                        "html": config.get("schema", "output_path").format(
+                            nb_type=notebook_type,
+                            output_type="html",
+                            nb_category=notebook_category,
+                            nb_name=notebook_name,
+                        ),
+                        "images": config.get("schema", "nb_img_path").format(
+                            nb_type=notebook_type,
+                            nb_category=notebook_category,
+                            nb_name=notebook_name,
+                        ),
+                        "notebook": config.get("schema", "nb_path").format(
+                            nb_type=notebook_type,
+                            nb_category=notebook_category,
+                            nb_name=notebook_name
+                        ),
+                        "description": scrape_description(
+                            config.get("schema", "nb_descr").format(
+                                nb_type=notebook_type,
+                                nb_category=notebook_category,
+                                nb_name=notebook_name
+                            )
+                        ),
+                        "children": [],
+                    }
+                )
+            if len(directory[notebook_type][i]["children"]) == 0:
+                print(f"WARNING: Empty directory found {category_path}")
+                directory[notebook_type].pop(i)
+            else:
+                i += 1
+
+        if len(directory[notebook_type]) > 0:
+            directory_path = os.path.join(html_path, "directory.json")
+
+            with open(directory_path, "w") as f:
+                json.dump(directory, f, indent=4)
+                f.write("\n")
+
+            directory_paths.append(directory_path)
+
+    return directory_paths
+
+
+def gitadd(file_paths):
+    """git add all directory JSON files"""
+    exitcode = system_with_exitcode('git', 'add', *file_paths)
+    if exitcode != 0:
+        raise Exception(f'git add failed for {file_paths} with exit code {exitcode}')
+
+
+def main(config):
+
+    directory_paths = generate_directories(config)
+    gitadd(directory_paths)
+
+
+if __name__ == '__main__':
+    config = configparser.ConfigParser()
+    config.read(CONFIG_LOCATION)
+
+    main(config)
