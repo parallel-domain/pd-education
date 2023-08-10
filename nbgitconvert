@@ -3,8 +3,7 @@
 """
 Convert juptyer notebooks to html, markdown, or pdf during git commits
 
-1. convert them to the format(s) specified in nbgitconvert.ini placing them in a
-   rendered/{output_format}/ directory
+1. convert them to the format(s) and file schema specified in config.ini
     - HTML files will get post-processing to remove rerun visualizer data and store separately
 2. commit those newly converted files
 """
@@ -19,7 +18,7 @@ convert_dict = {
     'html': {'ext': 'html', 'default': 'yes'},
     'pdf': {'ext': 'pdf', 'default': 'no'}
 }
-CONFIG_LOCATION = 'nbgitconvert.ini'
+CONFIG_LOCATION = 'config.ini'
 
 
 def create_config():
@@ -32,7 +31,7 @@ def create_config():
         lines.append('{} = {}'.format(output_type, d['default']))
     lines.append("")
     lines.append("[output_dir]")
-    lines.append("path = rendered/{output_type}")
+    lines.append("path = .rendered/{output_type}")
 
     with open(CONFIG_LOCATION, "w") as f:
         f.write('\n'.join(lines))
@@ -121,9 +120,12 @@ def convert(files, output_type, output_dir):
         file_dir = os.path.dirname(file_path)
         file_name = os.path.basename(file).split('.')[0]
         os.chdir(file_dir)
-        write_dir = f'{file_dir}/{output_dir}'
+        write_dir = os.path.join(os.path.dirname(file_dir), output_dir)
+        if not file_dir.endswith("notebooks"):
+            notebook_category = os.path.split(file_dir)[1]
+            write_dir = os.path.join(write_dir, notebook_category)
         if output_type == 'html':
-            write_dir += f'/{file_name}'
+            write_dir = os.path.join(write_dir, file_name)
         args = ['jupyter', 'nbconvert', '--to']
         args.append(output_type)
         args.append(file_path)
@@ -134,7 +136,7 @@ def convert(files, output_type, output_dir):
             treat_html_file(f"{write_dir}/{file_name}.html")
         os.chdir(root_dir)
         if exitcode == 0:
-            converted_paths.append(file)
+            converted_paths.append(write_dir)
         else:
             raise Exception(f'nbconvert failed for {file}')
 
@@ -145,10 +147,10 @@ def gitadd(file_paths, output_type, output_dir):
     """git add all newly (re)rendered notebook files"""
     add_dirs = []
     for file_path in file_paths:
-        file_dir = os.path.dirname(os.path.realpath(file_path))
-        file_name = os.path.basename(file_path).split('.')[0]
-        add_dir = f'{file_dir}/{output_dir}'
-        add_dir += f'/{file_name}*' if output_type == 'html' else '*'
+        # file_dir = os.path.dirname(os.path.realpath(file_path))
+        # file_name = os.path.basename(file_path).split('.')[0]
+        # add_dir = f'{file_dir}/{output_dir}'
+        add_dir = file_path + '*'
         add_dirs.append(add_dir)
     exitcode = system_with_exitcode('git', 'add', *add_dirs)
     if exitcode != 0:
