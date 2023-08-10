@@ -162,7 +162,7 @@ def gitadd(file_paths):
     """git add all directory JSON files"""
     exitcode = system_with_exitcode('git', 'add', *file_paths)
     if exitcode != 0:
-        raise Exception(f'git add failed for {file_paths} with exit code {exitcode}')
+        print(f'WARNING: git add failed for {file_paths} with exit code {exitcode}')
 
 
 def main(config):
