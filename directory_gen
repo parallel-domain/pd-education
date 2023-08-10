@@ -7,7 +7,6 @@ import configparser
 import json
 import os
 import subprocess
-from pathlib import Path
 
 CONFIG_LOCATION = 'config.ini'
 
