@@ -79,7 +79,7 @@
                     "html": "data_lab/notebooks/.rendered/html/pedestrians/pedestrians_around_ego",
                     "images": "data_lab/notebooks/pedestrians/pedestrians_around_ego/.resources/images",
                     "notebook": "data_lab/notebooks/pedestrians/pedestrians_around_ego/pedestrians_around_ego.ipynb",
-                    "description": "Use generators to place pedestrians in close proximity of the ego.\n",
+                    "description": "Use generators to place pedestrians in close proximity to the ego.\n",
                     "children": []
                 }
             ]
