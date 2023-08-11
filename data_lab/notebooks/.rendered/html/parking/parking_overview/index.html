@@ -11,7 +11,7 @@
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="Parking-Notebook">Parking Notebook<a class="anchor-link" href="#Parking-Notebook">¶</a></h1><p>In this notebook, we'll explore setting up parking scenarios to capture data from. To do this, we'll take the usual approach of loading a map and populating it with agents, but we will learn more about using the <code>LaneSpawnPolicy</code> we pass to the ego vehicle's <code>PositionRequest</code> to control the type of scene we end up with. In this case, we'll request that the ego's position is for the <code>ParkingSpace</code> lane type, which will lead to a parking-centric scene, as all of the <code>LocationRelativePositionRequest</code> we use for the other agents will follow the ego vehicle placement. We will also see how to modify the parking environment passing <code>EnvironmentParameters</code> into the scenario's <code>set_environment</code> method.</p>
-<p><img alt="Example parking scene" src="./images/parking_overview/parking_scene_2.jpg"/></p>
+<p><img alt="Example parking scene" src="./resources/images/parking_scene_2.jpg"/></p>
 </div>
 </div>
 </div>
@@ -323,7 +323,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Render-Scenario-1-">Render Scenario 1 <a class="anchor" id="scenario1_render"></a><a class="anchor-link" href="#Render-Scenario-1-">¶</a></h3><p><img alt="Example parking scenario 1" src="./images/parking_overview/parking_scene_2.jpg"/></p>
+<h3 id="Render-Scenario-1-">Render Scenario 1 <a class="anchor" id="scenario1_render"></a><a class="anchor-link" href="#Render-Scenario-1-">¶</a></h3><p><img alt="Example parking scenario 1" src="./resources/images/parking_scene_2.jpg"/></p>
 <p>In this example, we just want to get a preview of our scenario without saving it to disk. To do this, we can use the <code>preview_scenario</code> method. Since we just want to get a look at the scene and the parking maneuver, we can avoid a longer wait time by rendering at longer capture rate. Since our simulation is at 100Hz, setting the <code>sim_capture_rate</code> to 100 will give us data capture at 1Hz, which is appropriate for a preview. This way we can see a 10 second scene with only 10 <code>frames_per_scene</code>.</p>
 </div>
 </div>
@@ -499,7 +499,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Render-Scenario-2-">Render Scenario 2 <a class="anchor" id="scenario2_render"></a><a class="anchor-link" href="#Render-Scenario-2-">¶</a></h3><p><img alt="Example parking scene 2" src="./images/parking_overview/parking_scene.jpg"/></p>
+<h3 id="Render-Scenario-2-">Render Scenario 2 <a class="anchor" id="scenario2_render"></a><a class="anchor-link" href="#Render-Scenario-2-">¶</a></h3><p><img alt="Example parking scene 2" src="./resources/images/parking_scene.jpg"/></p>
 <p><em>Example output</em></p>
 </div>
 </div>
@@ -575,9 +575,9 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5.-Examples-of-other-variations-">5. Examples of other variations <a class="anchor" id="examples"></a><a class="anchor-link" href="#5.-Examples-of-other-variations-">¶</a></h2><p><img alt="White Double Round Angled" src="./images/parking_overview/parking_lines_example1.jpg"/>
+<h2 id="5.-Examples-of-other-variations-">5. Examples of other variations <a class="anchor" id="examples"></a><a class="anchor-link" href="#5.-Examples-of-other-variations-">¶</a></h2><p><img alt="White Double Round Angled" src="./resources/images/parking_lines_example1.jpg"/>
 <em>White Double Round Angled</em></p>
-<p><img alt="Blue Dashed Angled" src="./images/parking_overview/parking_lines_example2.jpg"/>
+<p><img alt="Blue Dashed Angled" src="./resources/images/parking_lines_example2.jpg"/>
 <em>Blue Dashed Angled</em></p>
 </div>
 </div>
