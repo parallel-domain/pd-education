@@ -2,7 +2,7 @@
 
 ### Code tutorials covering all things Data Lab
 
-![Reactor scene](reactor/images/introduction/reactor_intro_scooter.jpg)
+![Reactor scene](reactor/introduction/resources/images/reactor_intro_scooter.jpg)
 *Example Reactor Output*
 <br><br>
 
@@ -19,30 +19,30 @@ Next, we take to the skies in drone scenes by taking simulation control of the e
 Finally we will look at calculating statistics on our generated data, and how these statistics can affect model training.
 <br><br>
 
-![Parking scene](parking/images/parking_overview/parking_scene.jpg)
+![Parking scene](parking/parking_overview/resources/images/parking_scene.jpg)
 *Example Parking Scene*
 
 ### Outline
 
-1. [Data Lab Overview](general_use/data_lab_overview.ipynb)
+1. [Data Lab Overview](general_use/data_lab_overview/data_lab_overview.ipynb)
     - In this notebook we familiarize ourselves with the anatomy of a Data Lab script by generating a basic driving scenario.
-2. [Parking scene](parking/parking_overview.ipynb)
+2. [Parking scene](parking/parking_overview/parking_overview.ipynb)
     - This notebook explores modifying agent and environment parameters to create parking scenes with a variety of parking space styles.
-3. [Debris](road_debris/debris.ipynb)
+3. [Debris](road_debris/debris/debris.ipynb)
     - We gain experience querying the asset library for interesting objects and scattering them in the scene using a debris generator.
-4. [Intro to Reactor](reactor/introduction.ipynb)
+4. [Intro to Reactor](reactor/introduction/introduction.ipynb)
     - We get our first glimpse at placing custom simulation agents, placing a geometric primitive in the scene and inpainting it using textual prompts and Reactor
-5. [Pedestrian Behaviors](pedestrians/pedestrians_around_ego.ipynb)
+5. [Pedestrian Behaviors](pedestrians/pedestrians_around_ego/pedestrians_around_ego.ipynb)
     - We explore the possibilities of pedestrian control and the edge cases they can generate data for.
-6. [Lane Lines](lane_lines/lane_lines_2d.ipynb)
+6. [Lane Lines](lane_lines/lane_lines_2d/lane_lines_2d.ipynb)
     - We learn how to load map data and combine it with rendered frames to create lane line annotations.
-7. [Road Signs](road_signs/road_signs.ipynb)
+7. [Road Signs](road_signs/road_signs/road_signs.ipynb)
     - In this notebook we write functions to populate our environment with abundant road sign training examples.
-8. [Reactor Stroller Experiment](reactor/stroller_experiment.ipynb)
+8. [Reactor Stroller Experiment](reactor/stroller_experiment/stroller_experiment.ipynb)
     - We enact interdependent multi-object animation to place pedestrians behind strollers, and review training results achieved using a scaled output batch.
-9. [Drone scene from flight log](drones/drone_from_flight_log.ipynb)
+9. [Drone scene from flight log](drones/drone_scene_from_flight_log/drone_scene_from_flight_log.ipynb)
     - Takes an existing flight log and generate an airborne Data Lab scene.
-10. [Airborne Object Tracking](drones/airborne_object_tracking.ipynb)
+10. [Airborne Object Tracking](drones/airborne_object_tracking/airborne_object_tracking.ipynb)
     - Jointly simulate an ego and another airborne object to create object tracking data.
-11. [Impact of Dataset Statistics](general_use/dataset_statistics.ipynb)
+11. [Impact of Dataset Statistics](general_use/dataset_statistics/dataset_statistics.ipynb)
     - Observe the benefits of healing domain gap using dataset statistics to tune data generation parameters.
