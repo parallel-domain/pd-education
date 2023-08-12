@@ -95,7 +95,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Import-Dependencies-">Import Dependencies <a class="anchor" id="import_dependencies"></a><a class="anchor-link" href="#Import-Dependencies-">¶</a></h3><p>When building any Data Lab script, it is a good start to copy &amp; paste these standard imports for your project. Make sure that the LOCATION_VERSION matches the details of your Data Lab instance.</p>
+<h3 id="Import-Dependencies-">Import Dependencies <a class="anchor" id="import_dependencies"></a><a class="anchor-link" href="#Import-Dependencies-">¶</a></h3><p>When building any Data Lab script, it is a good start to copy &amp; paste these standard imports for your project.</p>
 </div>
 </div>
 </div>
@@ -145,7 +145,7 @@
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Setup-Data-Lab-">Setup Data Lab <a class="anchor" id="setup_datalab"></a><a class="anchor-link" href="#Setup-Data-Lab-">¶</a></h3><p>Make sure to match the location version loaded on your Data Lab instance</p>
+<h3 id="Setup-Data-Lab-">Setup Data Lab <a class="anchor" id="setup_datalab"></a><a class="anchor-link" href="#Setup-Data-Lab-">¶</a></h3><p>Make sure to configure your client script with the DATA_LAB_VERSION that matches your Data Lab cloud instance.</p>
 </div>
 </div>
 </div>
@@ -157,8 +157,8 @@
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">LOCATION_VERSION</span> <span class="o">=</span> <span class="s2">"v2.3.0-beta"</span>
-<span class="n">setup_datalab</span><span class="p">(</span><span class="n">LOCATION_VERSION</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">DATA_LAB_VERSION</span> <span class="o">=</span> <span class="s2">"v2.3.0-beta"</span>
+<span class="n">setup_datalab</span><span class="p">(</span><span class="n">DATA_LAB_VERSION</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -268,7 +268,7 @@
 <span class="n">scenario</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">seed</span>
 
 <span class="c1"># Set location</span>
-<span class="n">scenario</span><span class="o">.</span><span class="n">set_location</span><span class="p">(</span><span class="n">data_lab</span><span class="o">.</span><span class="n">Location</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">location_name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">LOCATION_VERSION</span><span class="p">))</span>
+<span class="n">scenario</span><span class="o">.</span><span class="n">set_location</span><span class="p">(</span><span class="n">data_lab</span><span class="o">.</span><span class="n">Location</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">location_name</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -350,7 +350,7 @@
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
 <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[7]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
-<pre>&lt;pd.data_lab.scenario.Scenario at 0x29637500940&gt;</pre>
+<pre>&lt;pd.data_lab.scenario.Scenario at 0x1af3f6dfa60&gt;</pre>
 </div>
 </div>
 </div>
