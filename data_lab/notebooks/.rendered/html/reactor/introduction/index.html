@@ -11,7 +11,7 @@
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="Introduction-to-Reactor">Introduction to Reactor<a class="anchor-link" href="#Introduction-to-Reactor">¶</a></h1><p>Reactor is a powerful tool which combines the power of the Parallel Domain synthetic data platform with generative AI, allowing us to place textually prompted objects within realistic looking driving scenarios. This notebook will build on the scenario generation process we saw in the Data Lab Overview notebook by adding a proxy object into the scenario and inpainting it using Reactor. To do this, we will cover the basic usage of the <code>CustomSimulationAgentBehaviour</code> class to place custom agents like the inpainting proxy object in the scene. In later notebooks, we will explore more sophisticated uses of custom simulation agents.</p>
-<p><img alt="Reactor example" src="./images/reactor_intro/reactor_intro_scooter.jpg"/>
+<p><img alt="Reactor example" src="./resources/images/reactor_intro_scooter.jpg"/>
 <em>Example of prompt: "a person on a mobility scooter".</em></p>
 </div>
 </div>
@@ -118,11 +118,11 @@
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">LOCATION_VERSION</span> <span class="o">=</span> <span class="s2">"v2.3.0-beta"</span>
-<span class="n">setup_datalab</span><span class="p">(</span><span class="n">LOCATION_VERSION</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">DATA_LAB_VERSION</span> <span class="o">=</span> <span class="s2">"v2.3.0-beta"</span>
+<span class="n">setup_datalab</span><span class="p">(</span><span class="n">DATA_LAB_VERSION</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -227,7 +227,7 @@
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">location_name</span> <span class="o">=</span> <span class="s2">"SF_6thAndMission_medium"</span>
@@ -235,7 +235,6 @@
 <span class="n">scenario</span> <span class="o">=</span> <span class="n">build_demo_scenario</span><span class="p">(</span>
     <span class="n">location_name</span><span class="o">=</span><span class="n">location_name</span><span class="p">,</span>
     <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
-    <span class="n">location_version</span><span class="o">=</span><span class="n">LOCATION_VERSION</span><span class="p">,</span>
     <span class="n">annotations</span><span class="o">=</span><span class="p">[</span><span class="n">SemanticSegmentation2D</span><span class="p">,</span> <span class="n">InstanceSegmentation2D</span><span class="p">],</span>
 <span class="p">)</span>
 </pre></div>
@@ -272,7 +271,7 @@
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># This asset will be used as the replacement object for the Reactor prompt</span>
@@ -302,9 +301,9 @@
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[4]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[5]:</div>
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
-<pre>&lt;pd.data_lab.scenario.Scenario at 0x2387d5b0880&gt;</pre>
+<pre>&lt;pd.data_lab.scenario.Scenario at 0x1e7813aa340&gt;</pre>
 </div>
 </div>
 </div>
@@ -317,7 +316,7 @@
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p><em>Example scene with cube primitive placed in front of ego</em></p>
-<p><img alt="Example scene with proxy" src="./images/reactor_intro/reactor_intro_primitive.jpg"/></p>
+<p><img alt="Example scene with proxy" src="./resources/images/reactor_intro_primitive.jpg"/></p>
 </div>
 </div>
 </div>
@@ -342,7 +341,7 @@
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Give a text prompt for the object we'd like to place in the scene. Passing more than one prompt will lead to random selection.</span>
@@ -366,7 +365,7 @@
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p><em>Example of prompt: "stroller"</em></p>
-<p><img alt="Example using prompt &amp;quot;stroller&amp;quot;" src="./images/reactor_intro/reactor_intro_stroller.jpg"/></p>
+<p><img alt="Example using prompt &amp;quot;stroller&amp;quot;" src="./resources/images/reactor_intro_stroller.jpg"/></p>
 </div>
 </div>
 </div>
@@ -593,7 +592,7 @@ Encoding Progress: 3 sensor frames [02:53, 57.81s/ sensor frames]
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Example-of-prompt:-%22a-man-walking-with-a-cane-wearing-jeans%22">Example of prompt: "a man walking with a cane wearing jeans"<a class="anchor-link" href="#Example-of-prompt:-%22a-man-walking-with-a-cane-wearing-jeans%22">¶</a></h3><p><img alt="Example using prompt: &amp;quot;a man walking with a cane wearing jeans&amp;quot;" src="./images/reactor_intro/reactor_intro_man_with_cane.jpg"/></p>
+<h3 id="Example-of-prompt:-%22a-man-walking-with-a-cane-wearing-jeans%22">Example of prompt: "a man walking with a cane wearing jeans"<a class="anchor-link" href="#Example-of-prompt:-%22a-man-walking-with-a-cane-wearing-jeans%22">¶</a></h3><p><img alt="Example using prompt: &amp;quot;a man walking with a cane wearing jeans&amp;quot;" src="./resources/images/reactor_intro_man_with_cane.jpg"/></p>
 </div>
 </div>
 </div>
