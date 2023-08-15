@@ -122,6 +122,21 @@
                     "children": []
                 }
             ]
+        },
+        {
+            "title": "Road Signs",
+            "slug": "road-signs",
+            "children": [
+                {
+                    "title": "Road Signs",
+                    "slug": "road-signs",
+                    "html": "data_lab/notebooks/.rendered/html/road_signs/road_signs",
+                    "images": "data_lab/notebooks/road_signs/road_signs/resources/images",
+                    "notebook": "data_lab/notebooks/road_signs/road_signs/road_signs.ipynb",
+                    "description": "Generate data for improving traffic sign detection by creating a custom generator which places road signs from chosen countries along the sides of the road.\n",
+                    "children": []
+                }
+            ]
         }
     ]
 }
