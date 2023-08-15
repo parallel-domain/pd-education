@@ -14,9 +14,7 @@ If you're brand new to data lab, diving head first into some of these tutorials 
 
 First, we review the process of configuring and rendering a basic driving scenario, which establishes the general structure of all Data Lab scripts. Then, we explore changing the environment and generator parameters to change the nature of the scene as we create parking and debris scenarios. Next, we get our first experience with custom simulation agents, placing a geometric primitive into the scene and inpainting it using Reactor's generative AI. After this, we cover making data for pedestrian edge cases, lane line detection, and road sign classification. We close out the land-based demonstrations with a case study on improving stroller detection using Reactor and some advanced simulation tricks.
 
-Next, we take to the skies in drone scenes by taking simulation control of the ego agent. First we look at simulating the ego with a stored flight path, which may be obtained from real drone flight logs. Next, we interpolate between two points to generate a custom flight path, and relate this path to another airborne object to the scene.
-
-Finally we will look at calculating statistics on our generated data, and how these statistics can affect model training.
+Next, we take to the skies in drone scenes by taking simulation control of the ego agent. First we look at simulating the ego with a stored flight path, which may be obtained from real drone flight logs. Then, we interpolate between two points to generate a custom flight path, and relate this path to another airborne object to the scene.
 <br><br>
 
 ![Parking scene](parking/parking_overview/resources/images/parking_scene.jpg)
@@ -44,5 +42,3 @@ Finally we will look at calculating statistics on our generated data, and how th
     - Takes an existing flight log and generate an airborne Data Lab scene.
 10. [Airborne Object Tracking](drones/airborne_object_tracking/airborne_object_tracking.ipynb)
     - Jointly simulate an ego and another airborne object to create object tracking data.
-11. [Impact of Dataset Statistics](general_use/dataset_statistics/dataset_statistics.ipynb)
-    - Observe the benefits of healing domain gap using dataset statistics to tune data generation parameters.
